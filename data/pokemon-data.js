@@ -1,3 +1,7 @@
+// ============================================================
+// POKÉMON CORE DATA
+// ============================================================
+
 const POKEMON_DATA = [
   { id: 1, name: "Bulbasaur", types: ["Grass", "Poison"], evolvesTo: [{ target: 2, condition: "LV 16" }] },
   { id: 2, name: "Ivysaur", types: ["Grass", "Poison"], evolvesTo: [{ target: 3, condition: "LV 32" }] },
@@ -227,6 +231,10 @@ const POKEMON_DATA = [
   { id: 151, name: "Mew", types: ["Psychic"], evolvesTo: [] }
 ];
 
+// ============================================================
+// LOOKUP TABLES
+// ============================================================
+
 const POKEMON_BY_ID = Object.fromEntries(
   POKEMON_DATA.map(pokemon => [pokemon.id, pokemon])
 );
@@ -240,4 +248,493 @@ for (const pokemon of POKEMON_DATA) {
       condition: evolution.condition
     };
   }
+}
+
+// ============================================================
+// VERSION AVAILABILITY
+// ============================================================
+
+const RED_EXCLUSIVE = new Set([
+  23, 24,
+  43, 44, 45,
+  56, 57,
+  58, 59,
+  123,
+  125
+]);
+
+const BLUE_EXCLUSIVE = new Set([
+  27, 28,
+  37, 38,
+  52, 53,
+  69, 70, 71,
+  126,
+  127
+]);
+
+const YELLOW_UNAVAILABLE = new Set([
+  13, 14, 15,
+  23, 24,
+  26,
+  52, 53,
+  109, 110,
+  124,
+  125,
+  126
+]);
+
+const VERSION_NAMES = {
+  red: "Red",
+  blue: "Blue",
+  yellow: "Yellow"
+};
+
+// ============================================================
+// DATA HELPERS
+// ============================================================
+
+function getAvailableVersions(pokemonId) {
+  if (pokemonId === 151) {
+    return [];
+  }
+
+  const versions = [];
+
+  if (!BLUE_EXCLUSIVE.has(pokemonId)) {
+    versions.push("red");
+  }
+
+  if (!RED_EXCLUSIVE.has(pokemonId)) {
+    versions.push("blue");
+  }
+
+  if (!YELLOW_UNAVAILABLE.has(pokemonId)) {
+    versions.push("yellow");
+  }
+
+  return versions;
+}
+
+function isPokemonAvailableInVersion(pokemonId, version) {
+  return getAvailableVersions(pokemonId).includes(version);
+}
+
+// ============================================================
+// SPECIAL ACQUISITIONS
+// Gifts, trades, prizes, fossils, static encounters, etc.
+// ============================================================
+
+const SPECIAL_ACQUISITIONS = {
+  1: [
+    {
+      versions: ["red", "blue"],
+      location: "Pallet Town",
+      method: "Starter choice"
+    },
+    {
+      versions: ["yellow"],
+      location: "Cerulean City",
+      method: "Gift"
+    }
+  ],
+
+  4: [
+    {
+      versions: ["red", "blue"],
+      location: "Pallet Town",
+      method: "Starter choice"
+    },
+    {
+      versions: ["yellow"],
+      location: "Route 24",
+      method: "Gift"
+    }
+  ],
+
+  7: [
+    {
+      versions: ["red", "blue"],
+      location: "Pallet Town",
+      method: "Starter choice"
+    },
+    {
+      versions: ["yellow"],
+      location: "Vermilion City",
+      method: "Gift"
+    }
+  ],
+
+  25: [
+    {
+      versions: ["yellow"],
+      location: "Pallet Town",
+      method: "Starter"
+    }
+  ],
+
+  29: [
+    {
+      versions: ["red", "blue"],
+      location: "Underground Path (Routes 5–6)",
+      method: "In-game trade for Nidoran♂"
+    }
+  ],
+
+  30: [
+    {
+      versions: ["red", "blue"],
+      location: "Route 11",
+      method: "In-game trade for Nidorino"
+    },
+    {
+      versions: ["red"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  33: [
+    {
+      versions: ["blue"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  35: [
+    {
+      versions: ["red", "blue"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  37: [
+    {
+      versions: ["yellow"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  40: [
+    {
+      versions: ["yellow"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  47: [
+    {
+      versions: ["yellow"],
+      location: "Route 18",
+      method: "In-game trade for Tangela"
+    }
+  ],
+
+  51: [
+    {
+      versions: ["yellow"],
+      location: "Route 11",
+      method: "In-game trade for Lickitung"
+    }
+  ],
+
+  63: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  67: [
+    {
+      versions: ["yellow"],
+      location: "Underground Path (Routes 5–6)",
+      method: "In-game trade for Cubone; evolves immediately"
+    }
+  ],
+
+  68: [
+    {
+      versions: ["yellow"],
+      location: "Underground Path (Routes 5–6)",
+      method: "Receive Machoke via in-game trade; immediate trade evolution"
+    }
+  ],
+
+  83: [
+    {
+      versions: ["red", "blue"],
+      location: "Vermilion City",
+      method: "In-game trade for Spearow"
+    }
+  ],
+
+  86: [
+    {
+      versions: ["red", "blue"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "In-game trade for Ponyta"
+    }
+  ],
+
+  87: [
+    {
+      versions: ["yellow"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "In-game trade for Growlithe"
+    }
+  ],
+
+  89: [
+    {
+      versions: ["yellow"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "In-game trade for Kangaskhan"
+    }
+  ],
+
+  101: [
+    {
+      versions: ["red", "blue"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "In-game trade for Raichu"
+    }
+  ],
+
+  106: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Saffron City Fighting Dojo",
+      method: "Gift choice"
+    }
+  ],
+
+  107: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Saffron City Fighting Dojo",
+      method: "Gift choice"
+    }
+  ],
+
+  108: [
+    {
+      versions: ["red", "blue"],
+      location: "Route 18",
+      method: "In-game trade for Slowbro"
+    }
+  ],
+
+  112: [
+    {
+      versions: ["yellow"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "In-game trade for Golduck"
+    }
+  ],
+
+  114: [
+    {
+      versions: ["red", "blue"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "In-game trade for Venonat"
+    }
+  ],
+
+  122: [
+    {
+      versions: ["red", "blue"],
+      location: "Route 2",
+      method: "In-game trade for Abra"
+    },
+    {
+      versions: ["yellow"],
+      location: "Route 2",
+      method: "In-game trade for Clefairy"
+    }
+  ],
+
+  123: [
+    {
+      versions: ["red", "yellow"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  124: [
+    {
+      versions: ["red", "blue"],
+      location: "Cerulean City",
+      method: "In-game trade for Poliwhirl"
+    }
+  ],
+
+  127: [
+    {
+      versions: ["blue", "yellow"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  129: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Route 4 Pokémon Center",
+      method: "Purchase from salesman for ₽500"
+    }
+  ],
+
+  131: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Silph Co.",
+      method: "Gift"
+    }
+  ],
+
+  133: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Celadon Mansion",
+      method: "Gift Pokémon"
+    }
+  ],
+
+  137: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  138: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "Revive Helix Fossil"
+    }
+  ],
+
+  140: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "Revive Dome Fossil"
+    }
+  ],
+
+  142: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Cinnabar Island Pokémon Lab",
+      method: "Revive Old Amber"
+    }
+  ],
+
+  143: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Route 12",
+      method: "Static encounter"
+    },
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Route 16",
+      method: "Static encounter"
+    }
+  ],
+
+  144: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Seafoam Islands",
+      method: "Static encounter"
+    }
+  ],
+
+  145: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Power Plant",
+      method: "Static encounter"
+    }
+  ],
+
+  146: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Victory Road",
+      method: "Static encounter"
+    }
+  ],
+
+  147: [
+    {
+      versions: ["red", "blue"],
+      location: "Celadon Game Corner",
+      method: "Prize Pokémon"
+    }
+  ],
+
+  150: [
+    {
+      versions: ["red", "blue", "yellow"],
+      location: "Cerulean Cave",
+      method: "Static encounter"
+    }
+  ],
+
+  151: [
+    {
+      versions: [],
+      location: "Event distribution",
+      method: "Not normally obtainable in-game"
+    }
+  ]
+};
+
+function getSpecialAcquisitions(pokemonId, version) {
+  return (SPECIAL_ACQUISITIONS[pokemonId] || [])
+    .filter(entry => entry.versions.includes(version));
+}
+
+// ============================================================
+// DISPLAY HELPERS
+// ============================================================
+
+function getSpriteUrl(pokemonId, version) {
+  const spriteVersion =
+    version === "yellow"
+      ? "yellow"
+      : "red-blue";
+
+  return (
+    "https://raw.githubusercontent.com/PokeAPI/sprites/master/" +
+    "sprites/pokemon/versions/generation-i/" +
+    spriteVersion +
+    "/" +
+    pokemonId +
+    ".png"
+  );
+}
+
+function formatEvolutionText(pokemon) {
+  if (!pokemon.evolvesTo.length) {
+    return "";
+  }
+
+  return pokemon.evolvesTo
+    .map(evolution => {
+      const target = POKEMON_BY_ID[evolution.target];
+
+      return `${target.name} — ${evolution.condition}`;
+    })
+    .join(" / ");
 }
