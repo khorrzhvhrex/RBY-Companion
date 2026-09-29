@@ -2047,17 +2047,26 @@ function renderVersionAvailability(
     availableInVersion &&
     saveLocked
   ) {
+    const obtained =
+      getDexEntry(
+        pokemon.id
+      ).obtained;
+  
+    if (obtained) {
+      return "";
+    }
+  
     return `
       <div class="availability-box unavailable">
-
+  
         Unavailable in this save
         due to an earlier choice.
-
+  
         <br>
-
+  
         Obtainable by trade
         from another save.
-
+  
       </div>
     `;
   }
