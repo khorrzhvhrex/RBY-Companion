@@ -1,8 +1,35 @@
+// ============================================================
+// APP CONFIG
+// ============================================================
 
 const APP_VERSION = "0.1.0";
+
 const STORAGE_KEY = "rby-companion-save";
+const ENCOUNTER_CACHE_KEY = "rby-companion-encounter-cache-v1";
+
+const VALID_VERSIONS = ["red", "blue", "yellow"];
+
+const DEX_FILTERS = [
+  "all",
+  "obtained",
+  "not-obtained",
+  "hall-of-fame",
+  "unobtainable"
+];
+
+
+// ============================================================
+// STATE
+// ============================================================
 
 let state = loadState();
+
+ensureStateShape();
+
+
+// ============================================================
+// INITIAL STATE
+// ============================================================
 
 function makeInitialState(gameVersion) {
   return {
@@ -10,78 +37,220 @@ function makeInitialState(gameVersion) {
     gameVersion,
 
     badges: Object.fromEntries(
-      PROGRESSION_DATA.badges.map(badge => [badge.id, false])
+      PROGRESSION_DATA.badges.map(badge => [
+        badge.id,
+        false
+      ])
     ),
 
     hms: Object.fromEntries(
-      PROGRESSION_DATA.hms.map(hm => [hm.id, false])
+      PROGRESSION_DATA.hms.map(hm => [
+        hm.id,
+        false
+      ])
     ),
 
     keyItems: Object.fromEntries(
-      PROGRESSION_DATA.keyItems.map(item => [item.id, false])
+      PROGRESSION_DATA.keyItems.map(item => [
+        item.id,
+        false
+      ])
     ),
 
     dex: {},
-    party: [null, null, null, null, null, null],
+
+    party: [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+
     journey: {},
 
-    activeView: "main"
+    activeView: "main",
+
+    dexFilter: "all"
   };
 }
 
+
+// ============================================================
+// STATE MIGRATION / SHAPE CHECK
+// ============================================================
+
+function ensureStateShape() {
+  if (!state) {
+    return;
+  }
+
+  state.appVersion = APP_VERSION;
+
+  state.badges ||= {};
+  state.hms ||= {};
+  state.keyItems ||= {};
+  state.dex ||= {};
+  state.journey ||= {};
+
+  if (!Array.isArray(state.party)) {
+    state.party = [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ];
+  }
+
+  while (state.party.length < 6) {
+    state.party.push(null);
+  }
+
+  state.party = state.party.slice(0, 6);
+
+  state.activeView ||= "main";
+
+  if (!DEX_FILTERS.includes(state.dexFilter)) {
+    state.dexFilter = "all";
+  }
+
+  for (const badge of PROGRESSION_DATA.badges) {
+    if (typeof state.badges[badge.id] !== "boolean") {
+      state.badges[badge.id] = false;
+    }
+  }
+
+  for (const hm of PROGRESSION_DATA.hms) {
+    if (typeof state.hms[hm.id] !== "boolean") {
+      state.hms[hm.id] = false;
+    }
+  }
+
+  for (const item of PROGRESSION_DATA.keyItems) {
+    if (
+      typeof state.keyItems[item.id] !== "boolean"
+    ) {
+      state.keyItems[item.id] = false;
+    }
+  }
+
+  saveState();
+}
+
+
+// ============================================================
+// LOCAL STORAGE
+// ============================================================
+
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw =
+      localStorage.getItem(STORAGE_KEY);
+
+    return raw
+      ? JSON.parse(raw)
+      : null;
   } catch (error) {
-    console.error("Could not load save:", error);
+    console.error(
+      "Could not load save:",
+      error
+    );
+
     return null;
   }
 }
 
+
 function saveState() {
-  if (!state) return;
+  if (!state) {
+    return;
+  }
 
   state.appVersion = APP_VERSION;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(state)
+  );
 }
+
+
+// ============================================================
+// VERSION / VIEW CONTROL
+// ============================================================
 
 function setVersion(version) {
   state = makeInitialState(version);
+
   saveState();
+
   render();
 }
+
 
 function setView(view) {
   state.activeView = view;
+
   saveState();
+
   render();
 }
+
+
+// ============================================================
+// GENERIC FLAGS
+// ============================================================
 
 function toggleFlag(group, id) {
-  state[group][id] = !state[group][id];
+  state[group][id] =
+    !state[group][id];
+
   saveState();
+
   render();
 }
+
+
+// ============================================================
+// SAVE RESET
+// ============================================================
 
 function resetSave() {
-  const confirmed = window.confirm(
-    "Start a new game? This will erase the current local save."
+  const confirmed =
+    window.confirm(
+      "Start a new game? This will erase the current local save."
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  localStorage.removeItem(
+    STORAGE_KEY
   );
 
-  if (!confirmed) return;
-
-  localStorage.removeItem(STORAGE_KEY);
   state = null;
+
   render();
 }
 
+
+// ============================================================
+// SAVE EXPORT
+// ============================================================
+
 function exportSave() {
-  if (!state) return;
+  if (!state) {
+    return;
+  }
 
   const now = new Date();
 
-  const pad = number => String(number).padStart(2, "0");
+  const pad = number =>
+    String(number).padStart(2, "0");
 
   const timestamp =
     now.getFullYear() +
@@ -90,48 +259,78 @@ function exportSave() {
     pad(now.getHours()) +
     pad(now.getMinutes());
 
-  const filename = `${timestamp}v${APP_VERSION}.json`;
+  const filename =
+    `${timestamp}v${APP_VERSION}.json`;
 
-  const blob = new Blob(
-    [JSON.stringify(state, null, 2)],
-    { type: "application/json" }
-  );
+  const blob =
+    new Blob(
+      [
+        JSON.stringify(
+          state,
+          null,
+          2
+        )
+      ],
+      {
+        type: "application/json"
+      }
+    );
 
-  const url = URL.createObjectURL(blob);
+  const url =
+    URL.createObjectURL(blob);
 
-  const link = document.createElement("a");
+  const link =
+    document.createElement("a");
+
   link.href = url;
   link.download = filename;
 
   document.body.appendChild(link);
+
   link.click();
+
   link.remove();
 
   URL.revokeObjectURL(url);
 }
 
-function importSave(file) {
-  if (!file) return;
 
-  const reader = new FileReader();
+// ============================================================
+// SAVE IMPORT
+// ============================================================
+
+function importSave(file) {
+  if (!file) {
+    return;
+  }
+
+  const reader =
+    new FileReader();
 
   reader.onload = event => {
     try {
-      const importedState = JSON.parse(event.target.result);
+      const importedState =
+        JSON.parse(
+          event.target.result
+        );
 
       if (
-        !["red", "blue", "yellow"].includes(importedState.gameVersion)
+        !VALID_VERSIONS.includes(
+          importedState.gameVersion
+        )
       ) {
-        throw new Error("Invalid game version.");
+        throw new Error(
+          "Invalid game version."
+        );
       }
 
-      state = importedState;
+      state =
+        importedState;
 
-      if (!state.activeView) {
-        state.activeView = "main";
-      }
+      ensureStateShape();
 
       saveState();
+
       render();
     } catch (error) {
       window.alert(
@@ -143,47 +342,82 @@ function importSave(file) {
   reader.readAsText(file);
 }
 
+
+// ============================================================
+// SPLASH
+// ============================================================
+
 function renderSplash() {
   return `
     <main class="splash">
+
       <section class="splash-card">
-        <h1>RBY Version Companion</h1>
+
+        <h1>
+          RBY Version Companion
+        </h1>
 
         <label for="version-select">
           Select Version
         </label>
 
         <select id="version-select">
-          <option value="">Choose...</option>
-          <option value="red">Pokémon Red</option>
-          <option value="blue">Pokémon Blue</option>
-          <option value="yellow">Pokémon Yellow</option>
+
+          <option value="">
+            Choose...
+          </option>
+
+          <option value="red">
+            Pokémon Red
+          </option>
+
+          <option value="blue">
+            Pokémon Blue
+          </option>
+
+          <option value="yellow">
+            Pokémon Yellow
+          </option>
+
         </select>
 
         <p class="brand">
           Khorrzh Kustom
         </p>
+
       </section>
+
     </main>
   `;
 }
 
+
+// ============================================================
+// HEADER
+// ============================================================
+
 function renderHeader() {
-  const badgeButtons = PROGRESSION_DATA.badges
-    .map(
-      badge => `
-        <button
-          class="badge-button ${
-            state.badges[badge.id] ? "obtained" : ""
-          }"
-          data-badge="${badge.id}"
-          title="${badge.name}"
-        >
-          ${badge.name.replace(" Badge", "")}
-        </button>
-      `
-    )
-    .join("");
+  const badgeButtons =
+    PROGRESSION_DATA.badges
+      .map(
+        badge => `
+          <button
+            class="badge-button ${
+              state.badges[badge.id]
+                ? "obtained"
+                : ""
+            }"
+            data-badge="${badge.id}"
+            title="${badge.name}"
+          >
+            ${badge.name.replace(
+              " Badge",
+              ""
+            )}
+          </button>
+        `
+      )
+      .join("");
 
   return `
     <header class="app-header">
@@ -191,13 +425,19 @@ function renderHeader() {
       <div class="title-row">
 
         <div>
-          <h1>RBY Companion</h1>
+
+          <h1>
+            RBY Companion
+          </h1>
 
           <p class="version-label">
-            Pokémon ${capitalize(state.gameVersion)}
+            Pokémon ${capitalize(
+              state.gameVersion
+            )}
             ·
             v${APP_VERSION}
           </p>
+
         </div>
 
         <div class="save-actions">
@@ -207,6 +447,7 @@ function renderHeader() {
           </button>
 
           <label class="button-label">
+
             Import
 
             <input
@@ -214,6 +455,7 @@ function renderHeader() {
               type="file"
               accept=".json,application/json"
             >
+
           </label>
 
           <button
@@ -232,20 +474,36 @@ function renderHeader() {
       </div>
 
       <nav class="nav-tabs">
-        ${navButton("main", "Main")}
-        ${navButton("journey", "Journey")}
-        ${navButton("dex", "Dex")}
+
+        ${navButton(
+          "main",
+          "Main"
+        )}
+
+        ${navButton(
+          "journey",
+          "Journey"
+        )}
+
+        ${navButton(
+          "dex",
+          "Dex"
+        )}
+
       </nav>
 
     </header>
   `;
 }
 
+
 function navButton(view, label) {
   return `
     <button
       class="nav-button ${
-        state.activeView === view ? "active" : ""
+        state.activeView === view
+          ? "active"
+          : ""
       }"
       data-view="${view}"
     >
@@ -254,12 +512,20 @@ function navButton(view, label) {
   `;
 }
 
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
+
 function renderMain() {
   return `
     <section class="page-grid">
 
       <article class="panel">
-        <h2>Party</h2>
+
+        <h2>
+          Party
+        </h2>
 
         <p class="muted">
           Party selection will populate from Pokémon
@@ -267,10 +533,12 @@ function renderMain() {
         </p>
 
         <div class="party-grid">
+
           ${state.party
             .map(
               (_, index) => `
                 <div class="party-slot">
+
                   <strong>
                     Slot ${index + 1}
                   </strong>
@@ -278,53 +546,89 @@ function renderMain() {
                   <span>
                     Empty
                   </span>
+
                 </div>
               `
             )
             .join("")}
+
         </div>
+
       </article>
 
       <article class="panel">
-        <h2>Party Evaluation</h2>
+
+        <h2>
+          Party Evaluation
+        </h2>
 
         <p class="muted">
-          Typing coverage will appear here once
-          Pokémon data and party selection are wired in.
+          Typing coverage will appear here
+          when the Party module is built.
         </p>
+
       </article>
 
       <article class="panel">
-        <h2>Current Journey Objectives</h2>
+
+        <h2>
+          Current Journey Objectives
+        </h2>
 
         <p class="muted">
-          No verified Journey data loaded yet.
+          Journey data has not yet been populated.
         </p>
+
       </article>
 
       <article class="panel">
-        <h2>HMs</h2>
+
+        <h2>
+          HMs
+        </h2>
 
         <div class="check-grid">
+
           ${PROGRESSION_DATA.hms
-            .map(item => flagControl("hms", item))
+            .map(
+              item =>
+                flagControl(
+                  "hms",
+                  item
+                )
+            )
             .join("")}
+
         </div>
+
       </article>
 
       <article class="panel wide">
-        <h2>Key Items</h2>
+
+        <h2>
+          Key Items
+        </h2>
 
         <div class="check-grid">
+
           ${PROGRESSION_DATA.keyItems
-            .map(item => flagControl("keyItems", item))
+            .map(
+              item =>
+                flagControl(
+                  "keyItems",
+                  item
+                )
+            )
             .join("")}
+
         </div>
+
       </article>
 
     </section>
   `;
 }
+
 
 function flagControl(group, item) {
   return `
@@ -334,7 +638,11 @@ function flagControl(group, item) {
         type="checkbox"
         data-flag-group="${group}"
         data-flag-id="${item.id}"
-        ${state[group][item.id] ? "checked" : ""}
+        ${
+          state[group][item.id]
+            ? "checked"
+            : ""
+        }
       >
 
       <span>
@@ -345,6 +653,11 @@ function flagControl(group, item) {
   `;
 }
 
+
+// ============================================================
+// JOURNEY PAGE
+// ============================================================
+
 function renderJourney() {
   return `
     <section class="panel">
@@ -352,12 +665,16 @@ function renderJourney() {
       <div class="section-heading">
 
         <div>
-          <h2>Journey</h2>
+
+          <h2>
+            Journey
+          </h2>
 
           <p class="muted">
             Only progression-significant locations
             and discrete optional actions belong here.
           </p>
+
         </div>
 
       </div>
@@ -369,8 +686,8 @@ function renderJourney() {
         </strong>
 
         <p>
-          Progression and Optional sections will appear
-          dynamically as verified RBY data is added.
+          Progression and Optional sections
+          will appear here.
         </p>
 
       </div>
@@ -379,58 +696,632 @@ function renderJourney() {
   `;
 }
 
-function renderDex() {
+
+// ============================================================
+// DEX STATE
+// ============================================================
+
+function ensureDexEntry(pokemonId) {
+  if (!state.dex[pokemonId]) {
+    state.dex[pokemonId] = {
+      obtained: false,
+      hallOfFame: false
+    };
+  }
+
+  if (
+    typeof state.dex[pokemonId].obtained
+      !== "boolean"
+  ) {
+    state.dex[pokemonId].obtained =
+      false;
+  }
+
+  if (
+    typeof state.dex[pokemonId].hallOfFame
+      !== "boolean"
+  ) {
+    state.dex[pokemonId].hallOfFame =
+      false;
+  }
+
+  return state.dex[pokemonId];
+}
+
+
+function getDexEntry(pokemonId) {
+  return (
+    state.dex[pokemonId] || {
+      obtained: false,
+      hallOfFame: false
+    }
+  );
+}
+
+
+function setDexFlag(
+  pokemonId,
+  flag,
+  value
+) {
+  const entry =
+    ensureDexEntry(pokemonId);
+
+  if (flag === "obtained") {
+    entry.obtained = value;
+
+    if (!value) {
+      entry.hallOfFame = false;
+    }
+  }
+
+  if (flag === "hallOfFame") {
+    entry.hallOfFame = value;
+
+    if (value) {
+      entry.obtained = true;
+    }
+  }
+
+  saveState();
+
+  render();
+}
+
+
+function setDexFilter(filter) {
+  if (!DEX_FILTERS.includes(filter)) {
+    return;
+  }
+
+  state.dexFilter = filter;
+
+  saveState();
+
+  render();
+}
+
+
+// ============================================================
+// DEX FILTERING
+// ============================================================
+
+function getFilteredPokemon() {
+  return POKEMON_DATA.filter(
+    pokemon => {
+      const entry =
+        getDexEntry(pokemon.id);
+
+      switch (state.dexFilter) {
+        case "obtained":
+          return entry.obtained;
+
+        case "not-obtained":
+          return !entry.obtained;
+
+        case "hall-of-fame":
+          return entry.hallOfFame;
+
+        case "unobtainable":
+          return !isPokemonAvailableInVersion(
+            pokemon.id,
+            state.gameVersion
+          );
+
+        case "all":
+        default:
+          return true;
+      }
+    }
+  );
+}
+
+
+// ============================================================
+// DEX SUMMARY
+// ============================================================
+
+function renderDexSummary() {
+  const obtained =
+    POKEMON_DATA.filter(
+      pokemon =>
+        getDexEntry(
+          pokemon.id
+        ).obtained
+    ).length;
+
+  const hallOfFame =
+    POKEMON_DATA.filter(
+      pokemon =>
+        getDexEntry(
+          pokemon.id
+        ).hallOfFame
+    ).length;
+
+  const unavailable =
+    POKEMON_DATA.filter(
+      pokemon =>
+        !isPokemonAvailableInVersion(
+          pokemon.id,
+          state.gameVersion
+        )
+    ).length;
+
   return `
-    <section class="panel">
+    <div class="dex-summary">
 
-      <div class="section-heading">
+      <div class="dex-stat">
+        <span class="dex-stat-number">
+          ${obtained}
+        </span>
+        <span class="dex-stat-label">
+          Obtained
+        </span>
+      </div>
 
-        <div>
-          <h2>Pokédex</h2>
+      <div class="dex-stat">
+        <span class="dex-stat-number">
+          ${151 - obtained}
+        </span>
+        <span class="dex-stat-label">
+          Remaining
+        </span>
+      </div>
 
-          <p class="muted">
-            Wild availability, evolution methods,
-            version availability, Obtained state,
-            and Hall of Fame tracking will live here.
-          </p>
+      <div class="dex-stat">
+        <span class="dex-stat-number">
+          ${hallOfFame}
+        </span>
+        <span class="dex-stat-label">
+          Hall of Fame
+        </span>
+      </div>
+
+      <div class="dex-stat">
+        <span class="dex-stat-number">
+          ${unavailable}
+        </span>
+        <span class="dex-stat-label">
+          Unavailable in ${VERSION_NAMES[state.gameVersion]}
+        </span>
+      </div>
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// DEX FILTER BUTTONS
+// ============================================================
+
+function renderDexFilters() {
+  const filters = [
+    ["all", "All"],
+    ["obtained", "Obtained"],
+    ["not-obtained", "Not Obtained"],
+    ["hall-of-fame", "Hall of Fame"],
+    ["unobtainable", "Unobtainable"]
+  ];
+
+  return `
+    <div class="filter-row">
+
+      ${filters
+        .map(
+          ([value, label]) => `
+            <button
+              class="filter-button ${
+                state.dexFilter === value
+                  ? "active"
+                  : ""
+              }"
+              data-dex-filter="${value}"
+            >
+              ${label}
+            </button>
+          `
+        )
+        .join("")}
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// DEX CARD
+// ============================================================
+
+function renderDexCard(pokemon) {
+  const entry =
+    getDexEntry(pokemon.id);
+
+  const availableVersions =
+    getAvailableVersions(
+      pokemon.id
+    );
+
+  const availableHere =
+    availableVersions.includes(
+      state.gameVersion
+    );
+
+  const acquisitions =
+    getSpecialAcquisitions(
+      pokemon.id,
+      state.gameVersion
+    );
+
+  const evolutionText =
+    formatEvolutionText(
+      pokemon
+    );
+
+  const evolvesFrom =
+    EVOLVES_FROM[pokemon.id];
+
+  return `
+    <article
+      class="dex-card ${
+        entry.obtained
+          ? "dex-obtained"
+          : ""
+      } ${
+        !availableHere
+          ? "dex-unavailable"
+          : ""
+      }"
+    >
+
+      <div class="dex-card-header">
+
+        <div class="dex-number">
+          #${String(
+            pokemon.id
+          ).padStart(3, "0")}
+        </div>
+
+        <img
+          class="dex-sprite"
+          src="${getSpriteUrl(
+            pokemon.id,
+            state.gameVersion
+          )}"
+          alt="${pokemon.name}"
+          loading="lazy"
+        >
+
+        <div class="dex-name-block">
+
+          <h3>
+            ${pokemon.name}
+          </h3>
+
+          <div class="type-row">
+
+            ${pokemon.types
+              .map(
+                type => `
+                  <span
+                    class="type-chip type-${type.toLowerCase()}"
+                  >
+                    ${type}
+                  </span>
+                `
+              )
+              .join("")}
+
+          </div>
+
         </div>
 
       </div>
 
-      <div class="filter-row">
+      ${renderVersionAvailability(
+        pokemon,
+        availableVersions,
+        availableHere
+      )}
 
-        <button class="filter-button active">
-          All
-        </button>
+      <div class="dex-checkbox-row">
 
-        <button class="filter-button">
+        <label>
+
+          <input
+            type="checkbox"
+            data-dex-id="${pokemon.id}"
+            data-dex-flag="obtained"
+            ${
+              entry.obtained
+                ? "checked"
+                : ""
+            }
+          >
+
           Obtained
-        </button>
 
-        <button class="filter-button">
-          Not Obtained
-        </button>
+        </label>
 
-        <button class="filter-button">
+        <label>
+
+          <input
+            type="checkbox"
+            data-dex-id="${pokemon.id}"
+            data-dex-flag="hallOfFame"
+            ${
+              entry.hallOfFame
+                ? "checked"
+                : ""
+            }
+          >
+
           Hall of Fame
-        </button>
 
-        <button class="filter-button">
-          Unobtainable
-        </button>
+        </label>
 
       </div>
 
-      <div class="empty-state">
+      <div class="dex-detail-section">
 
+        <h4>
+          Evolution
+        </h4>
+
+        ${renderEvolutionInfo(
+          pokemon,
+          evolutionText,
+          evolvesFrom
+        )}
+
+      </div>
+
+      <div class="dex-detail-section">
+
+        <h4>
+          Special Acquisition
+        </h4>
+
+        ${renderSpecialAcquisitions(
+          acquisitions,
+          availableHere
+        )}
+
+      </div>
+
+      <div class="dex-detail-section">
+
+        <h4>
+          Wild Areas
+        </h4>
+
+        <div
+          class="wild-area-list"
+          id="wild-areas-${pokemon.id}"
+          data-pokemon-id="${pokemon.id}"
+        >
+          ${
+            availableHere
+              ? `<span class="muted">Loading wild areas…</span>`
+              : `<span class="muted">Unavailable in this version.</span>`
+          }
+        </div>
+
+      </div>
+
+    </article>
+  `;
+}
+
+
+// ============================================================
+// VERSION AVAILABILITY DISPLAY
+// ============================================================
+
+function renderVersionAvailability(
+  pokemon,
+  versions,
+  availableHere
+) {
+  if (pokemon.id === 151) {
+    return `
+      <div class="availability-box unavailable">
+
+        Not normally obtainable
+        in Red, Blue, or Yellow.
+
+      </div>
+    `;
+  }
+
+  if (availableHere) {
+    return `
+      <div class="availability-box available">
+
+        Available in Pokémon
+        ${VERSION_NAMES[state.gameVersion]}
+
+      </div>
+    `;
+  }
+
+  const otherVersions =
+    versions
+      .map(
+        version =>
+          VERSION_NAMES[version]
+      )
+      .join(" / ");
+
+  return `
+    <div class="availability-box unavailable">
+
+      Unavailable in Pokémon
+      ${VERSION_NAMES[state.gameVersion]}
+
+      ${
+        otherVersions
+          ? `<br>Available in: ${otherVersions}`
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// EVOLUTION DISPLAY
+// ============================================================
+
+function renderEvolutionInfo(
+  pokemon,
+  evolutionText,
+  evolvesFrom
+) {
+  const lines = [];
+
+  if (evolvesFrom) {
+    const source =
+      POKEMON_BY_ID[
+        evolvesFrom.source
+      ];
+
+    lines.push(`
+      <div>
         <strong>
-          Pokédex database not populated yet.
+          Evolves from:
         </strong>
+        ${source.name}
+        — ${evolvesFrom.condition}
+      </div>
+    `);
+  }
 
-        <p>
-          We will add the 151 Pokémon from
-          verified Red/Blue/Yellow source data.
-        </p>
+  if (evolutionText) {
+    lines.push(`
+      <div>
+        <strong>
+          Evolves to:
+        </strong>
+        ${evolutionText}
+      </div>
+    `);
+  }
+
+  if (!lines.length) {
+    return `
+      <span class="muted">
+        No evolution in Generation I.
+      </span>
+    `;
+  }
+
+  return lines.join("");
+}
+
+
+// ============================================================
+// SPECIAL ACQUISITION DISPLAY
+// ============================================================
+
+function renderSpecialAcquisitions(
+  acquisitions,
+  availableHere
+) {
+  if (!availableHere) {
+    return `
+      <span class="muted">
+        None in this version.
+      </span>
+    `;
+  }
+
+  if (!acquisitions.length) {
+    return `
+      <span class="muted">
+        No direct gift, trade, prize,
+        fossil, purchase, or static acquisition.
+      </span>
+    `;
+  }
+
+  return `
+    <ul class="acquisition-list">
+
+      ${acquisitions
+        .map(
+          acquisition => `
+            <li>
+              <strong>
+                ${acquisition.location}
+              </strong>
+              —
+              ${acquisition.method}
+            </li>
+          `
+        )
+        .join("")}
+
+    </ul>
+  `;
+}
+
+
+// ============================================================
+// DEX PAGE
+// ============================================================
+
+function renderDex() {
+  const filteredPokemon =
+    getFilteredPokemon();
+
+  return `
+    <section class="dex-page">
+
+      <div class="panel">
+
+        <div class="section-heading">
+
+          <div>
+
+            <h2>
+              Pokédex
+            </h2>
+
+            <p class="muted">
+              Pokémon ${VERSION_NAMES[state.gameVersion]}
+              · Generation I
+            </p>
+
+          </div>
+
+        </div>
+
+        ${renderDexSummary()}
+
+        ${renderDexFilters()}
+
+      </div>
+
+      <div class="dex-grid">
+
+        ${
+          filteredPokemon.length
+            ? filteredPokemon
+                .map(
+                  pokemon =>
+                    renderDexCard(
+                      pokemon
+                    )
+                )
+                .join("")
+            : `
+              <div class="panel empty-state">
+                No Pokémon match this filter.
+              </div>
+            `
+        }
 
       </div>
 
@@ -438,15 +1329,335 @@ function renderDex() {
   `;
 }
 
-function renderApp() {
-  let pageContent = renderMain();
 
-  if (state.activeView === "journey") {
-    pageContent = renderJourney();
+// ============================================================
+// ENCOUNTER CACHE
+// ============================================================
+
+function loadEncounterCache() {
+  try {
+    const raw =
+      localStorage.getItem(
+        ENCOUNTER_CACHE_KEY
+      );
+
+    return raw
+      ? JSON.parse(raw)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+
+function saveEncounterCache(cache) {
+  try {
+    localStorage.setItem(
+      ENCOUNTER_CACHE_KEY,
+      JSON.stringify(cache)
+    );
+  } catch (error) {
+    console.warn(
+      "Encounter cache could not be saved:",
+      error
+    );
+  }
+}
+
+
+// ============================================================
+// WILD ENCOUNTER LOOKUP
+// ============================================================
+
+async function getWildLocations(
+  pokemonId,
+  version
+) {
+  const cache =
+    loadEncounterCache();
+
+  cache[version] ||= {};
+
+  if (
+    Array.isArray(
+      cache[version][pokemonId]
+    )
+  ) {
+    return cache[version][pokemonId];
   }
 
-  if (state.activeView === "dex") {
-    pageContent = renderDex();
+  const url =
+    `https://pokeapi.co/api/v2/pokemon/${pokemonId}/encounters`;
+
+  const response =
+    await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      `Encounter lookup failed: ${response.status}`
+    );
+  }
+
+  const encounterData =
+    await response.json();
+
+  const locations =
+    encounterData
+      .filter(encounter =>
+        encounter.version_details.some(
+          detail =>
+            detail.version.name ===
+            version
+        )
+      )
+      .map(encounter =>
+        formatLocationAreaName(
+          encounter.location_area.name
+        )
+      );
+
+  const uniqueLocations =
+    [...new Set(locations)]
+      .sort(
+        (a, b) =>
+          a.localeCompare(
+            b,
+            undefined,
+            {
+              numeric: true
+            }
+          )
+      );
+
+  cache[version][pokemonId] =
+    uniqueLocations;
+
+  saveEncounterCache(cache);
+
+  return uniqueLocations;
+}
+
+
+// ============================================================
+// LOCATION NAME FORMATTING
+// ============================================================
+
+function formatLocationAreaName(slug) {
+  let value = slug;
+
+  value = value.replace(
+    /^kanto-/,
+    ""
+  );
+
+  value = value.replace(
+    /-area$/,
+    ""
+  );
+
+  value = value.replace(
+    /-towards-.+$/,
+    ""
+  );
+
+  value = value.replace(
+    /-from-.+$/,
+    ""
+  );
+
+  value = value
+    .split("-")
+    .map(word =>
+      capitalize(word)
+    )
+    .join(" ");
+
+  value = value.replace(
+    /\bPokemon\b/g,
+    "Pokémon"
+  );
+
+  value = value.replace(
+    /\bB([0-9]+)f\b/gi,
+    "B$1F"
+  );
+
+  value = value.replace(
+    /\b([0-9]+)f\b/gi,
+    "$1F"
+  );
+
+  return value;
+}
+
+
+// ============================================================
+// WILD AREA DISPLAY
+// ============================================================
+
+function updateWildAreaElement(
+  pokemonId,
+  locations
+) {
+  const element =
+    document.getElementById(
+      `wild-areas-${pokemonId}`
+    );
+
+  if (!element) {
+    return;
+  }
+
+  if (!locations.length) {
+    element.innerHTML = `
+      <span class="muted">
+        No wild encounter in
+        Pokémon ${VERSION_NAMES[state.gameVersion]}.
+      </span>
+    `;
+
+    return;
+  }
+
+  element.innerHTML = `
+    <ul class="wild-location-list">
+
+      ${locations
+        .map(
+          location => `
+            <li>
+              ${location}
+            </li>
+          `
+        )
+        .join("")}
+
+    </ul>
+  `;
+}
+
+
+function updateWildAreaError(
+  pokemonId
+) {
+  const element =
+    document.getElementById(
+      `wild-areas-${pokemonId}`
+    );
+
+  if (!element) {
+    return;
+  }
+
+  element.innerHTML = `
+    <span class="wild-error">
+      Wild-area data could not be loaded.
+    </span>
+  `;
+}
+
+
+// ============================================================
+// WILD AREA HYDRATION
+// ============================================================
+
+async function hydrateDexWildLocations() {
+  if (
+    !state ||
+    state.activeView !== "dex"
+  ) {
+    return;
+  }
+
+  const pokemonIds =
+    [...document.querySelectorAll(
+      "[data-pokemon-id]"
+    )]
+      .map(
+        element =>
+          Number(
+            element.dataset.pokemonId
+          )
+      )
+      .filter(
+        pokemonId =>
+          isPokemonAvailableInVersion(
+            pokemonId,
+            state.gameVersion
+          )
+      );
+
+  const queue =
+    [...pokemonIds];
+
+  const workerCount =
+    Math.min(
+      8,
+      queue.length
+    );
+
+  async function worker() {
+    while (queue.length) {
+      const pokemonId =
+        queue.shift();
+
+      try {
+        const locations =
+          await getWildLocations(
+            pokemonId,
+            state.gameVersion
+          );
+
+        updateWildAreaElement(
+          pokemonId,
+          locations
+        );
+      } catch (error) {
+        console.error(
+          `Wild encounter lookup failed for #${pokemonId}:`,
+          error
+        );
+
+        updateWildAreaError(
+          pokemonId
+        );
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from(
+      {
+        length: workerCount
+      },
+      () => worker()
+    )
+  );
+}
+
+
+// ============================================================
+// APP RENDERING
+// ============================================================
+
+function renderApp() {
+  let pageContent =
+    renderMain();
+
+  if (
+    state.activeView ===
+    "journey"
+  ) {
+    pageContent =
+      renderJourney();
+  }
+
+  if (
+    state.activeView ===
+    "dex"
+  ) {
+    pageContent =
+      renderDex();
   }
 
   return `
@@ -462,44 +1673,75 @@ function renderApp() {
   `;
 }
 
-function render() {
-  const root = document.getElementById("app");
 
-  root.innerHTML = state
-    ? renderApp()
-    : renderSplash();
+function render() {
+  const root =
+    document.getElementById(
+      "app"
+    );
+
+  root.innerHTML =
+    state
+      ? renderApp()
+      : renderSplash();
 
   bindEvents();
+
+  if (
+    state &&
+    state.activeView === "dex"
+  ) {
+    hydrateDexWildLocations();
+  }
 }
+
+
+// ============================================================
+// EVENT BINDING
+// ============================================================
 
 function bindEvents() {
   const versionSelect =
-    document.getElementById("version-select");
+    document.getElementById(
+      "version-select"
+    );
 
   if (versionSelect) {
     versionSelect.addEventListener(
       "change",
       event => {
-        if (event.target.value) {
-          setVersion(event.target.value);
+        if (
+          event.target.value
+        ) {
+          setVersion(
+            event.target.value
+          );
         }
       }
     );
   }
 
+
   document
-    .querySelectorAll("[data-view]")
+    .querySelectorAll(
+      "[data-view]"
+    )
     .forEach(button => {
       button.addEventListener(
         "click",
         () => {
-          setView(button.dataset.view);
+          setView(
+            button.dataset.view
+          );
         }
       );
     });
 
+
   document
-    .querySelectorAll("[data-badge]")
+    .querySelectorAll(
+      "[data-badge]"
+    )
     .forEach(button => {
       button.addEventListener(
         "click",
@@ -512,8 +1754,11 @@ function bindEvents() {
       );
     });
 
+
   document
-    .querySelectorAll("[data-flag-group]")
+    .querySelectorAll(
+      "[data-flag-group]"
+    )
     .forEach(input => {
       input.addEventListener(
         "change",
@@ -526,22 +1771,67 @@ function bindEvents() {
       );
     });
 
+
   document
-    .getElementById("export-save")
+    .querySelectorAll(
+      "[data-dex-filter]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          setDexFilter(
+            button.dataset.dexFilter
+          );
+        }
+      );
+    });
+
+
+  document
+    .querySelectorAll(
+      "[data-dex-id][data-dex-flag]"
+    )
+    .forEach(input => {
+      input.addEventListener(
+        "change",
+        () => {
+          setDexFlag(
+            Number(
+              input.dataset.dexId
+            ),
+            input.dataset.dexFlag,
+            input.checked
+          );
+        }
+      );
+    });
+
+
+  document
+    .getElementById(
+      "export-save"
+    )
     ?.addEventListener(
       "click",
       exportSave
     );
 
+
   document
-    .getElementById("reset-save")
+    .getElementById(
+      "reset-save"
+    )
     ?.addEventListener(
       "click",
       resetSave
     );
 
+
   document
-    .getElementById("import-save")
+    .getElementById(
+      "import-save"
+    )
     ?.addEventListener(
       "change",
       event => {
@@ -554,11 +1844,25 @@ function bindEvents() {
     );
 }
 
+
+// ============================================================
+// GENERAL HELPERS
+// ============================================================
+
 function capitalize(value) {
+  if (!value) {
+    return "";
+  }
+
   return (
     value.charAt(0).toUpperCase() +
     value.slice(1)
   );
 }
+
+
+// ============================================================
+// START APP
+// ============================================================
 
 render();
