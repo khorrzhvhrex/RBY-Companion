@@ -1076,18 +1076,10 @@ function renderDexCard(pokemon) {
 
       </div>
 
-      <div class="dex-detail-section">
-
-        <h4>
-          Special Acquisition
-        </h4>
-
-        ${renderSpecialAcquisitions(
-          acquisitions,
-          availableHere
-        )}
-
-      </div>
+      ${renderSpecialAcquisitionSection(
+        acquisitions,
+        availableHere
+      )}
 
       <div class="dex-detail-section">
 
@@ -1225,45 +1217,44 @@ function renderEvolutionInfo(
 // SPECIAL ACQUISITION DISPLAY
 // ============================================================
 
-function renderSpecialAcquisitions(
+function renderSpecialAcquisitionSection(
   acquisitions,
   availableHere
 ) {
   if (!availableHere) {
-    return `
-      <span class="muted">
-        None in this version.
-      </span>
-    `;
+    return "";
   }
 
   if (!acquisitions.length) {
-    return `
-      <span class="muted">
-        No direct gift, trade, prize,
-        fossil, purchase, or static acquisition.
-      </span>
-    `;
+    return "";
   }
 
   return `
-    <ul class="acquisition-list">
+    <div class="dex-detail-section">
 
-      ${acquisitions
-        .map(
-          acquisition => `
-            <li>
-              <strong>
-                ${acquisition.location}
-              </strong>
-              —
-              ${acquisition.method}
-            </li>
-          `
-        )
-        .join("")}
+      <h4>
+        Special Acquisition
+      </h4>
 
-    </ul>
+      <ul class="acquisition-list">
+
+        ${acquisitions
+          .map(
+            acquisition => `
+              <li>
+                <strong>
+                  ${acquisition.location}
+                </strong>
+                —
+                ${acquisition.method}
+              </li>
+            `
+          )
+          .join("")}
+
+      </ul>
+
+    </div>
   `;
 }
 
