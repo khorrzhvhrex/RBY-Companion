@@ -72,8 +72,10 @@ function makeInitialState(gameVersion) {
 
     storyFlags: {},
     
-    activeView: "main",
-
+    exclusiveChoices: {
+      eeveeEvolution: null
+    },
+    
     activeView: "main",
 
     dexFilter: "all"
@@ -98,6 +100,16 @@ function ensureStateShape() {
   state.dex ||= {};
   state.journey ||= {};
   state.storyFlags ||= {};
+  state.exclusiveChoices ||= {};
+  
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      state.exclusiveChoices,
+      "eeveeEvolution"
+    )
+  ) {
+    state.exclusiveChoices.eeveeEvolution = null;
+  }
 
   if (!Array.isArray(state.party)) {
     state.party = [
@@ -960,7 +972,7 @@ function setJourneyChoice(
 
 function getAvailableJourneyLocations() {
   return JOURNEY_DATA
-    .map(location => {
+    .map((location, index) => {
       const objectives =
         location.objectives.filter(
           objective =>
@@ -977,16 +989,57 @@ function getAvailableJourneyLocations() {
             )
         );
 
+      const hasProgression =
+        incomplete.some(
+          objective =>
+            objective.section ===
+            "progression"
+        );
+
       return {
         ...location,
         objectives,
-        incomplete
+        incomplete,
+
+        // Preserve the original Journey-data order
+        // inside each priority group.
+        journeyOrder: index,
+
+        // Locations with active progression
+        // objectives always float to the top.
+        hasProgression
       };
     })
+
     .filter(
       location =>
         location.incomplete.length
-    );
+    )
+
+    .sort((a, b) => {
+      // ------------------------------------------------------------
+      // PROGRESSION LOCATIONS FIRST
+      // ------------------------------------------------------------
+
+      if (
+        a.hasProgression !==
+        b.hasProgression
+      ) {
+        return a.hasProgression
+          ? -1
+          : 1;
+      }
+
+
+      // ------------------------------------------------------------
+      // OTHERWISE PRESERVE JOURNEY DATA ORDER
+      // ------------------------------------------------------------
+
+      return (
+        a.journeyOrder -
+        b.journeyOrder
+      );
+    });
 }
 
 
@@ -1404,6 +1457,163 @@ function setDexFilter(filter) {
 
 
 // ============================================================
+// SAVE-SPECIFIC POKÉMON AVAILABILITY
+// ============================================================
+
+function getSaveLockedPokemonIds() {
+  const locked = new Set();
+
+
+  // ------------------------------------------------------------
+  // RED / BLUE STARTER CHOICE
+  // ------------------------------------------------------------
+
+  if (
+    state.gameVersion === "red" ||
+    state.gameVersion === "blue"
+  ) {
+    const starterChoice =
+      state.journey[
+        "choose-starter-rb"
+      ]?.choice;
+
+    const starterLines = {
+      bulbasaur: [1, 2, 3],
+      charmander: [4, 5, 6],
+      squirtle: [7, 8, 9]
+    };
+
+    if (starterChoice) {
+      for (
+        const [
+          choiceId,
+          pokemonIds
+        ] of Object.entries(
+          starterLines
+        )
+      ) {
+        if (
+          choiceId !==
+          starterChoice
+        ) {
+          for (
+            const pokemonId
+            of pokemonIds
+          ) {
+            locked.add(
+              pokemonId
+            );
+          }
+        }
+      }
+    }
+  }
+
+
+  // ------------------------------------------------------------
+  // FIGHTING DOJO CHOICE
+  // ------------------------------------------------------------
+
+  const dojoChoice =
+    state.journey[
+      "fighting-dojo-choice"
+    ]?.choice;
+
+  if (
+    dojoChoice === "hitmonlee"
+  ) {
+    locked.add(107);
+  }
+
+  if (
+    dojoChoice === "hitmonchan"
+  ) {
+    locked.add(106);
+  }
+
+
+  // ------------------------------------------------------------
+  // FOSSIL CHOICE
+  // ------------------------------------------------------------
+
+  const fossilChoice =
+    state.journey[
+      "choose-fossil"
+    ]?.choice;
+
+  if (
+    fossilChoice === "helix"
+  ) {
+    locked.add(140);
+    locked.add(141);
+  }
+
+  if (
+    fossilChoice === "dome"
+  ) {
+    locked.add(138);
+    locked.add(139);
+  }
+
+
+  // ------------------------------------------------------------
+  // EEVEE EVOLUTION CHOICE
+  // ------------------------------------------------------------
+
+  const eeveeChoice =
+    state.exclusiveChoices
+      .eeveeEvolution;
+
+  if (
+    eeveeChoice === "vaporeon"
+  ) {
+    locked.add(135);
+    locked.add(136);
+  }
+
+  if (
+    eeveeChoice === "jolteon"
+  ) {
+    locked.add(134);
+    locked.add(136);
+  }
+
+  if (
+    eeveeChoice === "flareon"
+  ) {
+    locked.add(134);
+    locked.add(135);
+  }
+
+
+  return locked;
+}
+
+
+function isPokemonSaveLocked(
+  pokemonId
+) {
+  return getSaveLockedPokemonIds()
+    .has(pokemonId);
+}
+
+
+function isPokemonNativelyAvailable(
+  pokemonId
+) {
+  return (
+    isPokemonAvailableInVersion(
+      pokemonId,
+      state.gameVersion
+    ) &&
+    !isPokemonSaveLocked(
+      pokemonId
+    )
+  );
+}
+
+
+// ============================================================
 // DEX FILTERING
 // ============================================================
 
@@ -1424,9 +1634,8 @@ function getFilteredPokemon() {
           return entry.hallOfFame;
 
         case "unobtainable":
-          return !isPokemonAvailableInVersion(
-            pokemon.id,
-            state.gameVersion
+          return !isPokemonNativelyAvailable(
+            pokemon.id
           );
 
         case "all":
@@ -1462,9 +1671,8 @@ function renderDexSummary() {
   const unavailable =
     POKEMON_DATA.filter(
       pokemon =>
-        !isPokemonAvailableInVersion(
-          pokemon.id,
-          state.gameVersion
+        !isPokemonNativelyAvailable(
+          pokemon.id
         )
     ).length;
 
@@ -1563,10 +1771,19 @@ function renderDexCard(pokemon) {
       pokemon.id
     );
 
-  const availableHere =
+  const availableInVersion =
     availableVersions.includes(
       state.gameVersion
     );
+  
+  const saveLocked =
+    isPokemonSaveLocked(
+      pokemon.id
+    );
+  
+  const availableHere =
+    availableInVersion &&
+    !saveLocked;
 
   const acquisitions =
     getSpecialAcquisitions(
@@ -1642,7 +1859,8 @@ function renderDexCard(pokemon) {
       ${renderVersionAvailability(
         pokemon,
         availableVersions,
-        availableHere
+        availableInVersion,
+        saveLocked
       )}
 
       <div class="dex-checkbox-row">
@@ -1728,13 +1946,14 @@ function renderDexCard(pokemon) {
 
 
 // ============================================================
-// VERSION AVAILABILITY DISPLAY
+// VERSION / SAVE AVAILABILITY DISPLAY
 // ============================================================
 
 function renderVersionAvailability(
   pokemon,
   versions,
-  availableHere
+  availableInVersion,
+  saveLocked
 ) {
   if (pokemon.id === 151) {
     return `
@@ -1747,7 +1966,28 @@ function renderVersionAvailability(
     `;
   }
 
-  if (availableHere) {
+
+  if (
+    availableInVersion &&
+    saveLocked
+  ) {
+    return `
+      <div class="availability-box unavailable">
+
+        Unavailable in this save
+        due to an earlier choice.
+
+        <br>
+
+        Obtainable by trade
+        from another save.
+
+      </div>
+    `;
+  }
+
+
+  if (availableInVersion) {
     return `
       <div class="availability-box available">
 
@@ -1758,6 +1998,7 @@ function renderVersionAvailability(
     `;
   }
 
+
   const otherVersions =
     versions
       .map(
@@ -1765,6 +2006,7 @@ function renderVersionAvailability(
           VERSION_NAMES[version]
       )
       .join(" / ");
+
 
   return `
     <div class="availability-box unavailable">
