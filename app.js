@@ -1364,6 +1364,20 @@ async function getWildLocations(
   pokemonId,
   version
 ) {
+  // ------------------------------------------------------------
+  // SCRIPTED ENCOUNTER OVERRIDES
+  // ------------------------------------------------------------
+  
+  // Pokémon Yellow's Route 1 Pikachu is encountered and caught
+  // by Professor Oak, not by the player. It is later given to
+  // the player as their starter, so it should not appear as a
+  // player-accessible wild location.
+  if (
+    pokemonId === 25 &&
+    version === "yellow"
+  ) {
+    return [];
+  }
   const cache =
     loadEncounterCache();
 
