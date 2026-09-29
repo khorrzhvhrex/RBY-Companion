@@ -2143,7 +2143,7 @@ function renderEvolutionInfo(
   if (!lines.length) {
     return `
       <span class="muted">
-        No evolution in Generation I.
+        None
       </span>
     `;
   }
