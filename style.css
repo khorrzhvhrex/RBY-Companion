@@ -283,3 +283,249 @@ button:hover,
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   DEX PAGE
+   ============================================================ */
+
+.dex-page {
+  display: grid;
+  gap: 1rem;
+}
+
+
+/* ============================================================
+   DEX SUMMARY
+   ============================================================ */
+
+.dex-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.dex-stat {
+  border: 1px solid #d8dde2;
+  border-radius: 8px;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  background: #f8f9fa;
+}
+
+.dex-stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.dex-stat-label {
+  color: #66707b;
+  font-size: 0.85rem;
+}
+
+
+/* ============================================================
+   DEX GRID
+   ============================================================ */
+
+.dex-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(320px, 1fr)
+    );
+  gap: 1rem;
+}
+
+
+/* ============================================================
+   DEX CARD
+   ============================================================ */
+
+.dex-card {
+  background: #ffffff;
+  border: 1px solid #cbd1d8;
+  border-radius: 10px;
+  padding: 1rem;
+  transition:
+    opacity 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.dex-card.dex-obtained {
+  border-width: 2px;
+}
+
+.dex-card.dex-unavailable {
+  background: #f5f5f5;
+}
+
+
+/* ============================================================
+   DEX CARD HEADER
+   ============================================================ */
+
+.dex-card-header {
+  display: grid;
+  grid-template-columns:
+    auto 72px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.dex-number {
+  font-weight: 700;
+  color: #66707b;
+  font-size: 0.9rem;
+}
+
+.dex-sprite {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.dex-name-block h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+
+/* ============================================================
+   TYPE CHIPS
+   ============================================================ */
+
+.type-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.type-chip {
+  display: inline-block;
+  border: 1px solid #aeb6bf;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   VERSION AVAILABILITY
+   ============================================================ */
+
+.availability-box {
+  margin-top: 0.8rem;
+  border-radius: 7px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.availability-box.available {
+  border: 1px solid #a8c7ab;
+  background: #f3f8f3;
+}
+
+.availability-box.unavailable {
+  border: 1px solid #d2adad;
+  background: #faf3f3;
+}
+
+
+/* ============================================================
+   DEX CHECKBOXES
+   ============================================================ */
+
+.dex-checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid #e0e4e8;
+  border-bottom: 1px solid #e0e4e8;
+}
+
+.dex-checkbox-row label {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+
+/* ============================================================
+   DEX DETAIL SECTIONS
+   ============================================================ */
+
+.dex-detail-section {
+  margin-top: 0.85rem;
+}
+
+.dex-detail-section h4 {
+  margin:
+    0
+    0
+    0.35rem;
+  font-size: 0.9rem;
+}
+
+.acquisition-list,
+.wild-location-list {
+  margin:
+    0.25rem
+    0
+    0;
+  padding-left: 1.2rem;
+}
+
+.acquisition-list li,
+.wild-location-list li {
+  margin: 0.2rem 0;
+}
+
+.wild-error {
+  color: #a13f3f;
+  font-size: 0.85rem;
+}
+
+
+/* ============================================================
+   RESPONSIVE DEX
+   ============================================================ */
+
+@media (max-width: 800px) {
+  .dex-summary {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .dex-grid {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .dex-summary {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .dex-card-header {
+    grid-template-columns:
+      auto 64px 1fr;
+  }
+
+  .dex-sprite {
+    width: 64px;
+    height: 64px;
+  }
+}
