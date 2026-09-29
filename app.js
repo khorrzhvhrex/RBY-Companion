@@ -764,9 +764,9 @@ function meetsJourneyRequirement(requirement) {
       );
 
     case "pokemonObtained":
-    return getDexEntry(
-      requirement.pokemonId
-    ).obtained;
+      return getDexEntry(
+        requirement.pokemonId
+      ).obtained;
 
     case "dexCount": {
       const count =
