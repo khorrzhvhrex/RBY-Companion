@@ -529,3 +529,150 @@ button:hover,
     height: 64px;
   }
 }
+
+/* ============================================================
+   JOURNEY PAGE
+   ============================================================ */
+
+.journey-page {
+  display: grid;
+  gap: 1rem;
+}
+
+
+.journey-location-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(340px, 1fr)
+    );
+  gap: 1rem;
+}
+
+
+.journey-location {
+  background: #ffffff;
+  border: 1px solid #cbd1d8;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+
+.journey-location h3 {
+  margin:
+    0
+    0
+    0.85rem;
+}
+
+
+.journey-section + .journey-section {
+  margin-top: 1rem;
+}
+
+
+.journey-section h4 {
+  margin:
+    0
+    0
+    0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e0e4e8;
+}
+
+
+.journey-section.optional h4 {
+  color: #66707b;
+}
+
+
+/* ============================================================
+   JOURNEY OBJECTIVES
+   ============================================================ */
+
+.journey-objective {
+  display: block;
+  border: 1px solid #d8dde2;
+  border-radius: 7px;
+  padding: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+
+.journey-check-line {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
+
+
+.journey-objective input[type="checkbox"] {
+  margin-top: 0.2rem;
+}
+
+
+.journey-choice-label {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+
+.journey-objective select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #aeb6bf;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+
+.journey-note {
+  display: block;
+  color: #66707b;
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+}
+
+
+/* ============================================================
+   MAIN JOURNEY SUMMARY
+   ============================================================ */
+
+.main-journey-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+
+.main-journey-location {
+  border-bottom: 1px solid #e0e4e8;
+  padding-bottom: 0.65rem;
+}
+
+
+.main-journey-location:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+
+.main-journey-location ul {
+  margin:
+    0.35rem
+    0
+    0;
+  padding-left: 1.25rem;
+}
+
+
+.main-journey-location li {
+  margin: 0.2rem 0;
+}
+
+
+@media (max-width: 800px) {
+  .journey-location-grid {
+    grid-template-columns: 1fr;
+  }
+}
