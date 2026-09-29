@@ -676,3 +676,28 @@ button:hover,
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   EEVEE EVOLUTION CHOICE
+   ============================================================ */
+
+.eevee-evolution-choice {
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #e0e4e8;
+}
+
+
+.eevee-evolution-choice label {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+
+.eevee-evolution-choice select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #aeb6bf;
+  border-radius: 6px;
+  background: #ffffff;
+}
