@@ -715,14 +715,7 @@ function getSpriteUrl(pokemonId, version) {
       ? "yellow"
       : "red-blue";
 
-  return (
-    "https://raw.githubusercontent.com/PokeAPI/sprites/master/" +
-    "sprites/pokemon/versions/generation-i/" +
-    spriteVersion +
-    "/" +
-    pokemonId +
-    ".png"
-  );
+  return `assets/sprites/${spriteVersion}/${pokemonId}.png`;
 }
 
 function formatEvolutionText(pokemon) {
