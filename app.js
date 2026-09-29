@@ -1460,6 +1460,48 @@ function setDexFilter(filter) {
 // SAVE-SPECIFIC POKÉMON AVAILABILITY
 // ============================================================
 
+// ------------------------------------------------------------
+// EEVEE EVOLUTION CHOICE
+// ------------------------------------------------------------
+
+function setEeveeEvolutionChoice(choice) {
+  const validChoices = [
+    "vaporeon",
+    "jolteon",
+    "flareon"
+  ];
+
+  if (
+    choice &&
+    !validChoices.includes(choice)
+  ) {
+    return;
+  }
+
+  state.exclusiveChoices.eeveeEvolution =
+    choice || null;
+
+  const pokemonByChoice = {
+    vaporeon: 134,
+    jolteon: 135,
+    flareon: 136
+  };
+
+  if (choice) {
+    const pokemonId =
+      pokemonByChoice[choice];
+
+    const entry =
+      ensureDexEntry(pokemonId);
+
+    entry.obtained = true;
+  }
+
+  saveState();
+
+  render();
+}
+
 function getSaveLockedPokemonIds() {
   const locked = new Set();
 
@@ -1906,13 +1948,19 @@ function renderDexCard(pokemon) {
         <h4>
           Evolution
         </h4>
-
+      
         ${renderEvolutionInfo(
           pokemon,
           evolutionText,
           evolvesFrom
         )}
-
+      
+        ${
+          pokemon.id === 133
+            ? renderEeveeEvolutionChoice()
+            : ""
+        }
+      
       </div>
 
       ${renderSpecialAcquisitionSection(
@@ -2073,6 +2121,103 @@ function renderEvolutionInfo(
   }
 
   return lines.join("");
+}
+
+
+// ============================================================
+// EEVEE EVOLUTION CHOICE DISPLAY
+// ============================================================
+
+function renderEeveeEvolutionChoice() {
+  const eeveeObtained =
+    getDexEntry(133).obtained;
+
+  const selected =
+    state.exclusiveChoices
+      .eeveeEvolution;
+
+  if (!eeveeObtained) {
+    return `
+      <div class="eevee-evolution-choice">
+
+        <span class="muted">
+          Mark Eevee as Obtained before
+          selecting its evolution.
+        </span>
+
+      </div>
+    `;
+  }
+
+  return `
+    <div class="eevee-evolution-choice">
+
+      <label
+        for="eevee-evolution-select"
+      >
+        <strong>
+          Evolution used in this save
+        </strong>
+      </label>
+
+      <select
+        id="eevee-evolution-select"
+        data-eevee-evolution
+      >
+
+        <option value="">
+          Not evolved yet
+        </option>
+
+        <option
+          value="vaporeon"
+          ${
+            selected === "vaporeon"
+              ? "selected"
+              : ""
+          }
+        >
+          Vaporeon — Water Stone
+        </option>
+
+        <option
+          value="jolteon"
+          ${
+            selected === "jolteon"
+              ? "selected"
+              : ""
+          }
+        >
+          Jolteon — Thunder Stone
+        </option>
+
+        <option
+          value="flareon"
+          ${
+            selected === "flareon"
+              ? "selected"
+              : ""
+          }
+        >
+          Flareon — Fire Stone
+        </option>
+
+      </select>
+
+      ${
+        selected
+          ? `
+            <div class="journey-note">
+              The other two Eeveelutions are now
+              unavailable natively in this save
+              and require trading from another save.
+            </div>
+          `
+          : ""
+      }
+
+    </div>
+  `;
 }
 
 
@@ -2694,6 +2839,24 @@ function bindEvents() {
           }
         );
       });
+
+
+    // ============================================================
+    // EEVEE EVOLUTION EVENT
+    // ============================================================
+  
+    document
+      .querySelector(
+        "[data-eevee-evolution]"
+      )
+      ?.addEventListener(
+        "change",
+        event => {
+          setEeveeEvolutionChoice(
+            event.target.value
+          );
+        }
+      );
 
 
   document
