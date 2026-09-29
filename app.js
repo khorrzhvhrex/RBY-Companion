@@ -70,6 +70,10 @@ function makeInitialState(gameVersion) {
 
     journey: {},
 
+    storyFlags: {},
+    
+    activeView: "main",
+
     activeView: "main",
 
     dexFilter: "all"
@@ -93,6 +97,7 @@ function ensureStateShape() {
   state.keyItems ||= {};
   state.dex ||= {};
   state.journey ||= {};
+  state.storyFlags ||= {};
 
   if (!Array.isArray(state.party)) {
     state.party = [
@@ -574,11 +579,9 @@ function renderMain() {
         <h2>
           Current Journey Objectives
         </h2>
-
-        <p class="muted">
-          Journey data has not yet been populated.
-        </p>
-
+      
+        ${renderMainJourneyObjectives()}
+      
       </article>
 
       <article class="panel">
@@ -655,44 +658,662 @@ function flagControl(group, item) {
 
 
 // ============================================================
+// JOURNEY STATE
+// ============================================================
+
+function getJourneyState(objectiveId) {
+  return (
+    state.journey[objectiveId] || {
+      completed: false,
+      choice: null
+    }
+  );
+}
+
+
+function isJourneyObjectiveComplete(objectiveId) {
+  return Boolean(
+    state.journey[objectiveId]?.completed
+  );
+}
+
+
+// ============================================================
+// JOURNEY REQUIREMENTS
+// ============================================================
+
+function meetsJourneyRequirement(requirement) {
+  switch (requirement.type) {
+
+    case "objective":
+      return isJourneyObjectiveComplete(
+        requirement.id
+      );
+
+
+    case "storyFlag":
+      return Boolean(
+        state.storyFlags[
+          requirement.id
+        ]
+      );
+
+
+    case "badge":
+      return Boolean(
+        state.badges[
+          requirement.id
+        ]
+      );
+
+
+    case "badgeCount": {
+      const excluded =
+        new Set(
+          requirement.exclude || []
+        );
+
+      const count =
+        PROGRESSION_DATA.badges
+          .filter(
+            badge =>
+              !excluded.has(
+                badge.id
+              )
+          )
+          .filter(
+            badge =>
+              state.badges[
+                badge.id
+              ]
+          )
+          .length;
+
+      return (
+        count >=
+        requirement.count
+      );
+    }
+
+
+    case "hm":
+      return Boolean(
+        state.hms[
+          requirement.id
+        ]
+      );
+
+
+    case "keyItem":
+      return Boolean(
+        state.keyItems[
+          requirement.id
+        ]
+      );
+
+
+    case "dexCount": {
+      const count =
+        POKEMON_DATA.filter(
+          pokemon =>
+            getDexEntry(
+              pokemon.id
+            ).obtained
+        ).length;
+
+      return (
+        count >=
+        requirement.count
+      );
+    }
+
+
+    case "hallOfFame":
+      return Boolean(
+        state.storyFlags.champion
+      );
+
+
+    case "any":
+      return (
+        requirement.requirements || []
+      ).some(
+        meetsJourneyRequirement
+      );
+
+
+    default:
+      return true;
+  }
+}
+
+
+function isJourneyObjectiveAvailable(objective) {
+  if (
+    objective.versions &&
+    !objective.versions.includes(
+      state.gameVersion
+    )
+  ) {
+    return false;
+  }
+
+  return (
+    objective.requires || []
+  ).every(
+    meetsJourneyRequirement
+  );
+}
+
+
+// ============================================================
+// JOURNEY EFFECTS
+// ============================================================
+
+function applyJourneyEffect(effect) {
+  switch (effect.type) {
+
+    case "badge":
+      state.badges[
+        effect.id
+      ] = true;
+      break;
+
+
+    case "hm":
+      state.hms[
+        effect.id
+      ] = true;
+      break;
+
+
+    case "keyItem":
+      state.keyItems[
+        effect.id
+      ] = true;
+      break;
+
+
+    case "storyFlag":
+      state.storyFlags[
+        effect.id
+      ] = true;
+      break;
+
+
+    case "dexObtained": {
+      const entry =
+        ensureDexEntry(
+          effect.pokemonId
+        );
+
+      entry.obtained = true;
+      break;
+    }
+  }
+}
+
+
+function applyJourneyEffects(effects = []) {
+  for (
+    const effect of effects
+  ) {
+    applyJourneyEffect(
+      effect
+    );
+  }
+}
+
+
+// ============================================================
+// JOURNEY OBJECTIVE UPDATES
+// ============================================================
+
+function setJourneyCheck(
+  objective,
+  completed
+) {
+  state.journey[
+    objective.id
+  ] ||= {
+    completed: false,
+    choice: null
+  };
+
+  state.journey[
+    objective.id
+  ].completed = completed;
+
+  if (completed) {
+    applyJourneyEffects(
+      objective.effects
+    );
+  }
+
+  saveState();
+
+  render();
+}
+
+
+function setJourneyChoice(
+  objective,
+  choiceId
+) {
+  state.journey[
+    objective.id
+  ] ||= {
+    completed: false,
+    choice: null
+  };
+
+  if (!choiceId) {
+    state.journey[
+      objective.id
+    ] = {
+      completed: false,
+      choice: null
+    };
+
+    saveState();
+
+    render();
+
+    return;
+  }
+
+  const choice =
+    objective.choices.find(
+      option =>
+        option.id ===
+        choiceId
+    );
+
+  if (!choice) {
+    return;
+  }
+
+  state.journey[
+    objective.id
+  ] = {
+    completed: true,
+    choice: choiceId
+  };
+
+  applyJourneyEffects(
+    choice.effects
+  );
+
+  applyJourneyEffects(
+    objective.effects
+  );
+
+  saveState();
+
+  render();
+}
+
+
+// ============================================================
+// JOURNEY LOOKUPS
+// ============================================================
+
+function getAvailableJourneyLocations() {
+  return JOURNEY_DATA
+    .map(location => {
+      const objectives =
+        location.objectives.filter(
+          objective =>
+            isJourneyObjectiveAvailable(
+              objective
+            )
+        );
+
+      const incomplete =
+        objectives.filter(
+          objective =>
+            !isJourneyObjectiveComplete(
+              objective.id
+            )
+        );
+
+      return {
+        ...location,
+        objectives,
+        incomplete
+      };
+    })
+    .filter(
+      location =>
+        location.incomplete.length
+    );
+}
+
+
+function findJourneyObjective(
+  objectiveId
+) {
+  for (
+    const location of
+    JOURNEY_DATA
+  ) {
+    const objective =
+      location.objectives.find(
+        item =>
+          item.id ===
+          objectiveId
+      );
+
+    if (objective) {
+      return objective;
+    }
+  }
+
+  return null;
+}
+
+
+// ============================================================
+// JOURNEY OBJECTIVE DISPLAY
+// ============================================================
+
+function renderJourneyObjective(
+  objective
+) {
+  const objectiveState =
+    getJourneyState(
+      objective.id
+    );
+
+  if (
+    objective.type ===
+    "choice"
+  ) {
+    return `
+      <div class="journey-objective">
+
+        <label
+          class="journey-choice-label"
+          for="journey-choice-${objective.id}"
+        >
+          ${objective.label}
+        </label>
+
+        <select
+          id="journey-choice-${objective.id}"
+          data-journey-choice="${objective.id}"
+        >
+
+          <option value="">
+            Not completed
+          </option>
+
+          ${objective.choices
+            .map(
+              choice => `
+                <option
+                  value="${choice.id}"
+                  ${
+                    objectiveState.choice ===
+                    choice.id
+                      ? "selected"
+                      : ""
+                  }
+                >
+                  ${choice.label}
+                </option>
+              `
+            )
+            .join("")}
+
+        </select>
+
+        ${
+          objective.note
+            ? `
+              <div class="journey-note">
+                ${objective.note}
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+    `;
+  }
+
+
+  return `
+    <label class="journey-objective">
+
+      <span class="journey-check-line">
+
+        <input
+          type="checkbox"
+          data-journey-check="${objective.id}"
+          ${
+            objectiveState.completed
+              ? "checked"
+              : ""
+          }
+        >
+
+        <span>
+          ${objective.label}
+        </span>
+
+      </span>
+
+      ${
+        objective.note
+          ? `
+            <span class="journey-note">
+              ${objective.note}
+            </span>
+          `
+          : ""
+      }
+
+    </label>
+  `;
+}
+
+
+// ============================================================
+// JOURNEY LOCATION DISPLAY
+// ============================================================
+
+function renderJourneyLocation(location) {
+  const progression =
+    location.objectives.filter(
+      objective =>
+        objective.section ===
+        "progression" &&
+        isJourneyObjectiveAvailable(
+          objective
+        ) &&
+        !isJourneyObjectiveComplete(
+          objective.id
+        )
+    );
+
+  const optional =
+    location.objectives.filter(
+      objective =>
+        objective.section ===
+        "optional" &&
+        isJourneyObjectiveAvailable(
+          objective
+        ) &&
+        !isJourneyObjectiveComplete(
+          objective.id
+        )
+    );
+
+  if (
+    !progression.length &&
+    !optional.length
+  ) {
+    return "";
+  }
+
+
+  return `
+    <article class="journey-location">
+
+      <h3>
+        ${location.name}
+      </h3>
+
+      ${
+        progression.length
+          ? `
+            <section class="journey-section">
+
+              <h4>
+                Progression
+              </h4>
+
+              ${progression
+                .map(
+                  renderJourneyObjective
+                )
+                .join("")}
+
+            </section>
+          `
+          : ""
+      }
+
+      ${
+        optional.length
+          ? `
+            <section class="journey-section optional">
+
+              <h4>
+                Optional
+              </h4>
+
+              ${optional
+                .map(
+                  renderJourneyObjective
+                )
+                .join("")}
+
+            </section>
+          `
+          : ""
+      }
+
+    </article>
+  `;
+}
+
+
+// ============================================================
 // JOURNEY PAGE
 // ============================================================
 
 function renderJourney() {
+  const locations =
+    getAvailableJourneyLocations();
+
   return `
-    <section class="panel">
+    <section class="journey-page">
 
-      <div class="section-heading">
+      <div class="panel">
 
-        <div>
+        <h2>
+          Journey
+        </h2>
 
-          <h2>
-            Journey
-          </h2>
-
-          <p class="muted">
-            Only progression-significant locations
-            and discrete optional actions belong here.
-          </p>
-
-        </div>
-
-      </div>
-
-      <div class="empty-state">
-
-        <strong>
-          Journey database not populated yet.
-        </strong>
-
-        <p>
-          Progression and Optional sections
-          will appear here.
+        <p class="muted">
+          Only progression-significant locations
+          and discrete optional actions are shown.
+          Completed locations disappear until new
+          gated objectives become available.
         </p>
 
       </div>
 
+      <div class="journey-location-grid">
+
+        ${
+          locations.length
+            ? locations
+                .map(
+                  renderJourneyLocation
+                )
+                .join("")
+            : `
+              <div class="panel empty-state">
+
+                No currently available
+                Journey objectives.
+
+              </div>
+            `
+        }
+
+      </div>
+
     </section>
+  `;
+}
+
+
+// ============================================================
+// MAIN PAGE JOURNEY SUMMARY
+// ============================================================
+
+function renderMainJourneyObjectives() {
+  const locations =
+    getAvailableJourneyLocations();
+
+  if (!locations.length) {
+    return `
+      <p class="muted">
+        No currently available Journey objectives.
+      </p>
+    `;
+  }
+
+  return `
+    <div class="main-journey-list">
+
+      ${locations
+        .map(location => `
+          <div class="main-journey-location">
+
+            <strong>
+              ${location.name}
+            </strong>
+
+            <ul>
+
+              ${location.incomplete
+                .map(
+                  objective => `
+                    <li>
+                      ${
+                        objective.section ===
+                        "optional"
+                          ? "Optional: "
+                          : ""
+                      }
+                      ${objective.label}
+                    </li>
+                  `
+                )
+                .join("")}
+
+            </ul>
+
+          </div>
+        `)
+        .join("")}
+
+    </div>
   `;
 }
 
@@ -1775,6 +2396,62 @@ function bindEvents() {
         }
       );
     });
+
+
+    // ============================================================
+    // JOURNEY EVENTS
+    // ============================================================
+  
+    document
+      .querySelectorAll(
+        "[data-journey-check]"
+      )
+      .forEach(input => {
+        input.addEventListener(
+          "change",
+          () => {
+            const objective =
+              findJourneyObjective(
+                input.dataset.journeyCheck
+              );
+  
+            if (!objective) {
+              return;
+            }
+  
+            setJourneyCheck(
+              objective,
+              input.checked
+            );
+          }
+        );
+      });
+  
+  
+    document
+      .querySelectorAll(
+        "[data-journey-choice]"
+      )
+      .forEach(select => {
+        select.addEventListener(
+          "change",
+          () => {
+            const objective =
+              findJourneyObjective(
+                select.dataset.journeyChoice
+              );
+  
+            if (!objective) {
+              return;
+            }
+  
+            setJourneyChoice(
+              objective,
+              select.value
+            );
+          }
+        );
+      });
 
 
   document
