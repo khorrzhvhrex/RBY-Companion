@@ -29,6 +29,7 @@ const PROGRESSION_DATA = {
     { id: "oaksParcel", name: "Oak's Parcel" },
     { id: "pokeFlute", name: "Poké Flute" },
     { id: "silphScope", name: "Silph Scope" },
+    { id: "secretKey", name: "Secret Key" },
     { id: "ssTicket", name: "S.S. Ticket" }
   ]
 };
