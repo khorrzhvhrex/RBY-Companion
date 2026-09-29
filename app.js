@@ -1465,37 +1465,65 @@ function setDexFilter(filter) {
 // ------------------------------------------------------------
 
 function setEeveeEvolutionChoice(choice) {
-  const validChoices = [
-    "vaporeon",
-    "jolteon",
-    "flareon"
-  ];
-
-  if (
-    choice &&
-    !validChoices.includes(choice)
-  ) {
-    return;
-  }
-
-  state.exclusiveChoices.eeveeEvolution =
-    choice || null;
-
   const pokemonByChoice = {
     vaporeon: 134,
     jolteon: 135,
     flareon: 136
   };
 
-  if (choice) {
-    const pokemonId =
-      pokemonByChoice[choice];
-
-    const entry =
-      ensureDexEntry(pokemonId);
-
-    entry.obtained = true;
+  if (
+    choice &&
+    !Object.prototype.hasOwnProperty.call(
+      pokemonByChoice,
+      choice
+    )
+  ) {
+    return;
   }
+
+
+  // ------------------------------------------------------------
+  // CLEAR CHOICE
+  // ------------------------------------------------------------
+
+  if (!choice) {
+    state.exclusiveChoices.eeveeEvolution =
+      null;
+
+    saveState();
+
+    render();
+
+    return;
+  }
+
+
+  // ------------------------------------------------------------
+  // RECORD SAVE-SPECIFIC EVOLUTION
+  // ------------------------------------------------------------
+
+  state.exclusiveChoices.eeveeEvolution =
+    choice;
+
+
+  // ------------------------------------------------------------
+  // MARK CHOSEN EVOLUTION OBTAINED
+  // ------------------------------------------------------------
+
+  const pokemonId =
+    pokemonByChoice[choice];
+
+  const entry =
+    ensureDexEntry(
+      pokemonId
+    );
+
+  entry.obtained = true;
+
+
+  // ------------------------------------------------------------
+  // SAVE AND REFRESH
+  // ------------------------------------------------------------
 
   saveState();
 
@@ -2841,22 +2869,28 @@ function bindEvents() {
       });
 
 
-    // ============================================================
-    // EEVEE EVOLUTION EVENT
-    // ============================================================
-  
-    document
-      .querySelector(
-        "[data-eevee-evolution]"
-      )
-      ?.addEventListener(
-        "change",
-        event => {
-          setEeveeEvolutionChoice(
-            event.target.value
-          );
-        }
-      );
+      // ============================================================
+      // EEVEE EVOLUTION EVENT
+      // ============================================================
+    
+      const eeveeEvolutionSelect =
+        document.querySelector(
+          "[data-eevee-evolution]"
+        );
+    
+      if (eeveeEvolutionSelect) {
+        eeveeEvolutionSelect.addEventListener(
+          "change",
+          () => {
+            const choice =
+              eeveeEvolutionSelect.value;
+    
+            setEeveeEvolutionChoice(
+              choice
+            );
+          }
+        );
+      }
 
 
   document
