@@ -317,6 +317,54 @@ button:hover,
   font-size: 0.9rem;
 }
 
+/* ------------------------------------------------------------
+   PARTY EVOLUTION
+   ------------------------------------------------------------ */
+
+.party-evolution {
+  padding-top: 0.65rem;
+  border-top: 1px solid #d8dde2;
+}
+
+
+.party-evolution-label {
+  margin-bottom: 0.45rem;
+
+  color: #66707b;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+
+.party-evolution-options {
+  display: grid;
+  gap: 0.4rem;
+}
+
+
+.party-evolve-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  padding: 0.45rem 0.6rem;
+
+  text-align: left;
+}
+
+
+.party-evolve-button small {
+  color: #66707b;
+  white-space: nowrap;
+}
+
 .check-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
