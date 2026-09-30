@@ -3113,7 +3113,7 @@ function renderApp() {
   }
 
   return `
-    <div class="app-shell">
+    <div class="app-shell theme-${state.gameVersion}">
 
       ${renderHeader()}
 
