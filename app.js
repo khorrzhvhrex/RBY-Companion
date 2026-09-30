@@ -938,7 +938,7 @@ function renderMain() {
   return `
     <section class="page-grid">
 
-      <article class="panel">
+      <article class="panel wide">
 
         <h2>
           Party
