@@ -536,6 +536,245 @@ function navButton(view, label) {
 // MAIN PAGE
 // ============================================================
 
+// ============================================================
+// PARTY
+// ============================================================
+
+function getObtainedPokemon() {
+  return POKEMON_DATA.filter(
+    pokemon =>
+      getDexEntry(
+        pokemon.id
+      ).obtained
+  );
+}
+
+
+// ------------------------------------------------------------
+// PARTY SLOT STATE
+// ------------------------------------------------------------
+
+function getPartyPokemon(slotIndex) {
+  const pokemonId =
+    state.party[slotIndex];
+
+  if (!pokemonId) {
+    return null;
+  }
+
+  return (
+    POKEMON_BY_ID[pokemonId] ||
+    null
+  );
+}
+
+
+function setPartyPokemon(
+  slotIndex,
+  pokemonId
+) {
+  if (
+    slotIndex < 0 ||
+    slotIndex > 5
+  ) {
+    return;
+  }
+
+  if (!pokemonId) {
+    state.party[slotIndex] = null;
+
+    saveState();
+    render();
+
+    return;
+  }
+
+  const pokemon =
+    POKEMON_BY_ID[pokemonId];
+
+  if (!pokemon) {
+    return;
+  }
+
+  if (
+    !getDexEntry(
+      pokemonId
+    ).obtained
+  ) {
+    return;
+  }
+
+  state.party[slotIndex] =
+    pokemonId;
+
+  saveState();
+  render();
+}
+
+
+// ------------------------------------------------------------
+// PARTY VALIDATION
+// ------------------------------------------------------------
+
+function validateParty() {
+  state.party =
+    state.party.map(
+      pokemonId => {
+        if (!pokemonId) {
+          return null;
+        }
+
+        const pokemon =
+          POKEMON_BY_ID[
+            pokemonId
+          ];
+
+        if (!pokemon) {
+          return null;
+        }
+
+        if (
+          !getDexEntry(
+            pokemonId
+          ).obtained
+        ) {
+          return null;
+        }
+
+        return pokemonId;
+      }
+    );
+}
+
+
+// ------------------------------------------------------------
+// PARTY SLOT RENDERING
+// ------------------------------------------------------------
+
+function renderPartySlot(
+  slotIndex
+) {
+  const pokemon =
+    getPartyPokemon(
+      slotIndex
+    );
+
+  const obtainedPokemon =
+    getObtainedPokemon();
+
+  return `
+    <div class="party-slot">
+
+      <div class="party-slot-heading">
+
+        <strong>
+          Slot ${slotIndex + 1}
+        </strong>
+
+        ${
+          pokemon
+            ? `
+              <button
+                type="button"
+                class="party-clear-button"
+                data-party-clear="${slotIndex}"
+                title="Clear Slot ${slotIndex + 1}"
+                aria-label="Clear Slot ${slotIndex + 1}"
+              >
+                ×
+              </button>
+            `
+            : ""
+        }
+
+      </div>
+
+      <select
+        class="party-select"
+        data-party-slot="${slotIndex}"
+      >
+
+        <option value="">
+          Empty
+        </option>
+
+        ${obtainedPokemon
+          .map(
+            optionPokemon => `
+              <option
+                value="${optionPokemon.id}"
+                ${
+                  pokemon?.id ===
+                  optionPokemon.id
+                    ? "selected"
+                    : ""
+                }
+              >
+                #${String(
+                  optionPokemon.id
+                ).padStart(
+                  3,
+                  "0"
+                )}
+                ${optionPokemon.name}
+              </option>
+            `
+          )
+          .join("")}
+
+      </select>
+
+      ${
+        pokemon
+          ? `
+            <div class="party-pokemon-display">
+
+              <img
+                class="party-sprite"
+                src="${getSpriteUrl(
+                  pokemon.id,
+                  state.gameVersion
+                )}"
+                alt="${pokemon.name}"
+              >
+
+              <div class="party-pokemon-info">
+
+                <strong>
+                  ${pokemon.name}
+                </strong>
+
+                <div class="type-row">
+
+                  ${pokemon.types
+                    .map(
+                      type => `
+                        <span
+                          class="type-chip type-${type.toLowerCase()}"
+                        >
+                          ${type}
+                        </span>
+                      `
+                    )
+                    .join("")}
+
+                </div>
+
+              </div>
+
+            </div>
+          `
+          : `
+            <div class="party-empty-state">
+              No Pokémon selected.
+            </div>
+          `
+      }
+
+    </div>
+  `;
+}
+
 function renderMain() {
   return `
     <section class="page-grid">
@@ -547,30 +786,21 @@ function renderMain() {
         </h2>
 
         <p class="muted">
-          Party selection will populate from Pokémon
-          marked Obtained in the Dex.
+          Party selections are limited to Pokémon
+          currently marked Obtained in the Dex.
         </p>
 
         <div class="party-grid">
 
           ${state.party
             .map(
-              (_, index) => `
-                <div class="party-slot">
-
-                  <strong>
-                    Slot ${index + 1}
-                  </strong>
-
-                  <span>
-                    Empty
-                  </span>
-
-                </div>
-              `
+              (_, index) =>
+                renderPartySlot(
+                  index
+                )
             )
             .join("")}
-
+        
         </div>
 
       </article>
@@ -1442,6 +1672,8 @@ function setDexFlag(
       entry.obtained = true;
     }
   }
+
+  validateParty();
 
   saveState();
 
@@ -2831,6 +3063,58 @@ function bindEvents() {
         }
       );
     });
+
+
+    // ============================================================
+    // PARTY EVENTS
+    // ============================================================
+  
+    document
+      .querySelectorAll(
+        "[data-party-slot]"
+      )
+      .forEach(select => {
+        select.addEventListener(
+          "change",
+          () => {
+            const slotIndex =
+              Number(
+                select.dataset.partySlot
+              );
+  
+            const pokemonId =
+              select.value
+                ? Number(
+                    select.value
+                  )
+                : null;
+  
+            setPartyPokemon(
+              slotIndex,
+              pokemonId
+            );
+          }
+        );
+      });
+  
+  
+    document
+      .querySelectorAll(
+        "[data-party-clear]"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () => {
+            setPartyPokemon(
+              Number(
+                button.dataset.partyClear
+              ),
+              null
+            );
+          }
+        );
+      });
 
 
     // ============================================================
