@@ -648,6 +648,160 @@ function validateParty() {
 
 
 // ------------------------------------------------------------
+// PARTY EVOLUTION
+// ------------------------------------------------------------
+
+function evolvePartyPokemon(
+  slotIndex,
+  targetPokemonId
+) {
+  const pokemon =
+    getPartyPokemon(
+      slotIndex
+    );
+
+  if (!pokemon) {
+    return;
+  }
+
+  const evolution =
+    pokemon.evolvesTo.find(
+      option =>
+        option.target ===
+        targetPokemonId
+    );
+
+  if (!evolution) {
+    return;
+  }
+
+  const evolvedPokemon =
+    POKEMON_BY_ID[
+      targetPokemonId
+    ];
+
+  if (!evolvedPokemon) {
+    return;
+  }
+
+
+  // ------------------------------------------------------------
+  // RECORD EEVEE EVOLUTION CHOICE
+  // ------------------------------------------------------------
+
+  if (
+    pokemon.id === 133 &&
+    !state.exclusiveChoices
+      .eeveeEvolution
+  ) {
+    const eeveeChoices = {
+      134: "vaporeon",
+      135: "jolteon",
+      136: "flareon"
+    };
+
+    state.exclusiveChoices
+      .eeveeEvolution =
+        eeveeChoices[
+          targetPokemonId
+        ] || null;
+  }
+
+
+  // ------------------------------------------------------------
+  // REPLACE PARTY MEMBER
+  // ------------------------------------------------------------
+
+  state.party[
+    slotIndex
+  ] = targetPokemonId;
+
+
+  // ------------------------------------------------------------
+  // MARK EVOLUTION OBTAINED
+  // ------------------------------------------------------------
+
+  const dexEntry =
+    ensureDexEntry(
+      targetPokemonId
+    );
+
+  dexEntry.obtained = true;
+
+
+  // ------------------------------------------------------------
+  // SAVE AND REFRESH
+  // ------------------------------------------------------------
+
+  saveState();
+
+  render();
+}
+
+
+// ------------------------------------------------------------
+// PARTY EVOLUTION DISPLAY
+// ------------------------------------------------------------
+
+function renderPartyEvolutionControls(
+  pokemon,
+  slotIndex
+) {
+  if (
+    !pokemon.evolvesTo.length
+  ) {
+    return "";
+  }
+
+  return `
+    <div class="party-evolution">
+
+      <div class="party-evolution-label">
+        Evolution
+      </div>
+
+      <div class="party-evolution-options">
+
+        ${pokemon.evolvesTo
+          .map(
+            evolution => {
+              const target =
+                POKEMON_BY_ID[
+                  evolution.target
+                ];
+
+              if (!target) {
+                return "";
+              }
+
+              return `
+                <button
+                  type="button"
+                  class="party-evolve-button"
+                  data-party-evolve-slot="${slotIndex}"
+                  data-party-evolve-target="${target.id}"
+                >
+                  <span>
+                    Evolve → ${target.name}
+                  </span>
+
+                  <small>
+                    ${evolution.condition}
+                  </small>
+                </button>
+              `;
+            }
+          )
+          .join("")}
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+// ------------------------------------------------------------
 // PARTY SLOT RENDERING
 // ------------------------------------------------------------
 
@@ -763,6 +917,11 @@ function renderPartySlot(
               </div>
 
             </div>
+
+            ${renderPartyEvolutionControls(
+              pokemon,
+              slotIndex
+            )}
           `
           : `
             <div class="party-empty-state">
@@ -3115,6 +3274,34 @@ function bindEvents() {
           }
         );
       });
+
+      document
+        .querySelectorAll(
+          "[data-party-evolve-slot][data-party-evolve-target]"
+        )
+        .forEach(button => {
+          button.addEventListener(
+            "click",
+            () => {
+              const slotIndex =
+                Number(
+                  button.dataset
+                    .partyEvolveSlot
+                );
+    
+              const targetPokemonId =
+                Number(
+                  button.dataset
+                    .partyEvolveTarget
+                );
+    
+              evolvePartyPokemon(
+                slotIndex,
+                targetPokemonId
+              );
+            }
+          );
+        });
 
 
     // ============================================================
