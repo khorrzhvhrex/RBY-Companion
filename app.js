@@ -2963,6 +2963,84 @@ function updateWildAreaElement(
       document.getElementById(
         `wild-area-section-${pokemonId}`
       );
+
+    if (section) {
+      section.remove();
+    }
+
+    return;
+  }
+
+
+  // ------------------------------------------------------------
+  // SHORT WILD-AREA LIST
+  // ------------------------------------------------------------
+
+  const visibleLocations =
+    locations.slice(0, 6);
+
+  const hiddenLocations =
+    locations.slice(6);
+
+
+  element.innerHTML = `
+    <ul class="wild-location-list">
+
+      ${visibleLocations
+        .map(
+          location => `
+            <li>
+              ${location}
+            </li>
+          `
+        )
+        .join("")}
+
+    </ul>
+
+    ${
+      hiddenLocations.length
+        ? `
+          <details class="wild-location-more">
+
+            <summary>
+              Show ${hiddenLocations.length} more
+            </summary>
+
+            <ul class="wild-location-list wild-location-list-extra">
+
+              ${hiddenLocations
+                .map(
+                  location => `
+                    <li>
+                      ${location}
+                    </li>
+                  `
+                )
+                .join("")}
+
+            </ul>
+
+          </details>
+        `
+        : ""
+    }
+  `;
+}
+  const element =
+    document.getElementById(
+      `wild-areas-${pokemonId}`
+    );
+
+  if (!element) {
+    return;
+  }
+
+  if (!locations.length) {
+    const section =
+      document.getElementById(
+        `wild-area-section-${pokemonId}`
+      );
   
     if (section) {
       section.remove();
