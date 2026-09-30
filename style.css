@@ -1361,3 +1361,85 @@ select,
   border-color: var(--border);
   color: var(--text);
 }
+
+/* ============================================================
+   POKÉMON TYPE COLORS
+   ============================================================ */
+
+.type-chip {
+  border: 0;
+  color: #ffffff;
+}
+
+
+/* ------------------------------------------------------------
+   GENERATION I TYPES
+   ------------------------------------------------------------ */
+
+.type-normal {
+  background: #a8a77a;
+  color: #171717;
+}
+
+.type-fire {
+  background: #ee8130;
+}
+
+.type-water {
+  background: #6390f0;
+}
+
+.type-electric {
+  background: #f7d02c;
+  color: #171717;
+}
+
+.type-grass {
+  background: #7ac74c;
+  color: #171717;
+}
+
+.type-ice {
+  background: #96d9d6;
+  color: #171717;
+}
+
+.type-fighting {
+  background: #c22e28;
+}
+
+.type-poison {
+  background: #a33ea1;
+}
+
+.type-ground {
+  background: #e2bf65;
+  color: #171717;
+}
+
+.type-flying {
+  background: #a98ff3;
+  color: #171717;
+}
+
+.type-psychic {
+  background: #f95587;
+}
+
+.type-bug {
+  background: #a6b91a;
+  color: #171717;
+}
+
+.type-rock {
+  background: #b6a136;
+  color: #171717;
+}
+
+.type-ghost {
+  background: #735797;
+}
+
+.type-dragon {
+  background: #6f35fc;
+}
