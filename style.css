@@ -660,6 +660,37 @@ button:hover,
   margin: 0.2rem 0;
 }
 
+/* ------------------------------------------------------------
+   EXPANDABLE WILD AREA LIST
+   ------------------------------------------------------------ */
+
+.wild-location-more {
+  margin-top: 0.45rem;
+}
+
+
+.wild-location-more summary {
+  width: fit-content;
+
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  user-select: none;
+}
+
+
+.wild-location-more summary:hover {
+  text-decoration: underline;
+}
+
+
+.wild-location-list-extra {
+  margin-top: 0.4rem;
+}
+
 .wild-error {
   color: #a13f3f;
   font-size: 0.85rem;
