@@ -229,14 +229,92 @@ button:hover,
   gap: 0.65rem;
 }
 
+/* ============================================================
+   PARTY
+   ============================================================ */
+
 .party-slot {
-  min-height: 90px;
-  border: 1px dashed #aeb6bf;
+  border: 1px solid #d8dde2;
   border-radius: 8px;
   padding: 0.75rem;
+
   display: flex;
   flex-direction: column;
+  gap: 0.65rem;
+
+  background: #f8f9fa;
+}
+
+
+.party-slot-heading {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+}
+
+
+.party-clear-button {
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+
+.party-select {
+  width: 100%;
+  padding: 0.5rem;
+
+  border: 1px solid #aeb6bf;
+  border-radius: 6px;
+
+  background: #ffffff;
+}
+
+
+.party-pokemon-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  min-height: 72px;
+}
+
+
+.party-sprite {
+  width: 64px;
+  height: 64px;
+
+  object-fit: contain;
+
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+
+.party-pokemon-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+
+.party-empty-state {
+  min-height: 64px;
+
+  display: flex;
+  align-items: center;
+
+  color: #66707b;
+  font-size: 0.9rem;
 }
 
 .check-grid {
