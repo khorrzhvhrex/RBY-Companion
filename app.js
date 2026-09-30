@@ -426,11 +426,13 @@ function renderHeader() {
             }"
             data-badge="${badge.id}"
             title="${badge.name}"
+            aria-label="${badge.name}"
           >
-            ${badge.name.replace(
-              " Badge",
-              ""
-            )}
+            <img
+              src="assets/badges/${badge.id}.png"
+              alt="${badge.name}"
+              class="badge-icon"
+            >
           </button>
         `
       )
