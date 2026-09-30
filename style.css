@@ -871,3 +871,382 @@ button:hover,
   border-radius: 6px;
   background: #ffffff;
 }
+
+/* ============================================================
+   VERSION THEMES / DARK MODE
+   Append this block at the very end of style.css
+   ============================================================ */
+
+:root {
+  --bg: #11151c;
+  --surface: #181d26;
+  --surface-2: #202733;
+  --surface-3: #2a3342;
+  --border: #384355;
+  --text: #eef2f7;
+  --muted: #a9b4c3;
+  --accent: #6ea8ff;
+  --accent-text: #0f141b;
+}
+
+
+/* ------------------------------------------------------------
+   GLOBAL DARK BASE
+   ------------------------------------------------------------ */
+
+body {
+  background: #0d1117;
+  color: #eef2f7;
+}
+
+.page-grid {
+  align-items: start;
+}
+
+
+/* ------------------------------------------------------------
+   SPLASH / NEW GAME SCREEN
+   ------------------------------------------------------------ */
+
+.splash {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+
+  background:
+    linear-gradient(
+      90deg,
+      #6b1010 0%,
+      #b99818 50%,
+      #103a78 100%
+    );
+}
+
+.splash-card {
+  width: min(430px, 100%);
+  background: rgba(12, 15, 20, 0.88);
+  color: #f4f7fb;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.splash-card h1 {
+  margin-top: 0;
+  color: #ffffff;
+}
+
+.splash-card label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: #f4f7fb;
+}
+
+.splash-card select {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f7fb;
+}
+
+.splash-card select option {
+  background: #181d26;
+  color: #f4f7fb;
+}
+
+.brand {
+  margin: 1.4rem 0 0;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f0d36b;
+}
+
+
+/* ------------------------------------------------------------
+   VERSION THEME VARIABLES
+   ------------------------------------------------------------ */
+
+.theme-red {
+  --bg: #120d10;
+  --surface: #1b1216;
+  --surface-2: #24171c;
+  --surface-3: #2e1c24;
+  --border: #4b2a34;
+  --text: #f6eef1;
+  --muted: #c7aeb6;
+  --accent: #d65b6c;
+  --accent-text: #ffffff;
+}
+
+.theme-blue {
+  --bg: #0d1220;
+  --surface: #121a2c;
+  --surface-2: #182239;
+  --surface-3: #1e2a46;
+  --border: #2e4367;
+  --text: #eef4ff;
+  --muted: #adc0e3;
+  --accent: #5d93ff;
+  --accent-text: #ffffff;
+}
+
+.theme-yellow {
+  --bg: #161207;
+  --surface: #211a09;
+  --surface-2: #2a210c;
+  --surface-3: #352a10;
+  --border: #5d4a16;
+  --text: #fbf3cf;
+  --muted: #d5c48a;
+  --accent: #f0c84c;
+  --accent-text: #1b1608;
+}
+
+
+/* ------------------------------------------------------------
+   APP SHELL / HEADER / TEXT
+   ------------------------------------------------------------ */
+
+.app-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-header {
+  background:
+    linear-gradient(
+      180deg,
+      var(--surface),
+      var(--surface-2)
+    );
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.title-row h1,
+.panel h2,
+.journey-location h3,
+.journey-section h4,
+.dex-card h3,
+.party-slot strong {
+  color: var(--text);
+}
+
+.version-label,
+.muted,
+.journey-note,
+.party-evolution-label,
+.party-evolve-button small,
+.party-empty-state {
+  color: var(--muted);
+}
+
+.content {
+  color: var(--text);
+}
+
+
+/* ------------------------------------------------------------
+   BUTTONS / INPUTS / SELECTS
+   ------------------------------------------------------------ */
+
+button,
+.button-label,
+select,
+input {
+  color: var(--text);
+}
+
+button,
+.button-label {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+button:hover,
+.button-label:hover {
+  background: var(--surface-3);
+}
+
+button:focus-visible,
+.button-label:focus-within,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+select,
+.party-select,
+.splash-card select {
+  border-color: var(--border);
+}
+
+.party-select,
+.splash-card select,
+.journey-objective select {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.party-select option,
+.splash-card select option,
+.journey-objective select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.danger {
+  border-color: #92474f;
+  color: #ffd8dd;
+}
+
+.danger:hover {
+  background: #4b2027;
+}
+
+
+/* ------------------------------------------------------------
+   NAV
+   ------------------------------------------------------------ */
+
+.nav-button {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.nav-button.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+
+/* ------------------------------------------------------------
+   PANELS / CARDS / BOXES
+   ------------------------------------------------------------ */
+
+.panel,
+.party-slot,
+.journey-location,
+.journey-objective,
+.dex-card,
+.availability-box,
+.flag-box,
+.dex-summary-card {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.party-slot {
+  border-style: solid;
+}
+
+.main-journey-location {
+  border-bottom-color: var(--border);
+}
+
+.journey-section h4 {
+  border-bottom-color: var(--border);
+}
+
+
+/* ------------------------------------------------------------
+   BADGES
+   ------------------------------------------------------------ */
+
+.badge-button {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.badge-button:hover {
+  background: var(--surface-3);
+}
+
+.badge-button.obtained {
+  border-color: var(--accent);
+  background: var(--surface-3);
+}
+
+
+/* ------------------------------------------------------------
+   PARTY / DEX DETAIL POLISH
+   ------------------------------------------------------------ */
+
+.party-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.party-pokemon-display {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 72px;
+}
+
+.party-pokemon-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.party-evolve-button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.party-evolve-button span {
+  min-width: 0;
+}
+
+.party-evolve-button small {
+  color: var(--muted);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.party-clear-button {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+
+/* ------------------------------------------------------------
+   RESPONSIVE PARTY GRID
+   ------------------------------------------------------------ */
+
+@media (max-width: 800px) {
+  .party-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .party-grid {
+    grid-template-columns: 1fr;
+  }
+}
