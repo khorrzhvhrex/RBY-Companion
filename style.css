@@ -123,23 +123,58 @@ button:hover,
   border-color: #b85f5f;
 }
 
+/* ============================================================
+   BADGE STRIP
+   ============================================================ */
+
 .badge-strip {
   display: grid;
-  grid-template-columns: repeat(8, minmax(70px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.35rem;
   margin-top: 1rem;
+  width: 100%;
 }
+
 
 .badge-button {
-  opacity: 0.35;
-  filter: grayscale(1);
-  padding-inline: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  padding: 0.4rem;
+
+  border: 1px solid #cbd1d8;
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  cursor: pointer;
 }
 
-.badge-button.obtained {
+
+.badge-icon {
+  width: 32px;
+  height: 32px;
+
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+
+  opacity: 0.28;
+  filter:
+    grayscale(1)
+    saturate(0.15)
+    brightness(1.25);
+
+  transition:
+    opacity 0.15s ease,
+    filter 0.15s ease;
+}
+
+
+.badge-button.obtained .badge-icon {
   opacity: 1;
   filter: none;
-  font-weight: 700;
 }
 
 .nav-tabs {
@@ -252,10 +287,6 @@ button:hover,
     margin-top: 1rem;
   }
 
-  .badge-strip {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
   .panel {
     margin-bottom: 1rem;
   }
@@ -266,9 +297,6 @@ button:hover,
 }
 
 @media (max-width: 480px) {
-  .badge-strip {
-    grid-template-columns: repeat(2, 1fr);
-  }
 
   .nav-tabs {
     display: grid;
