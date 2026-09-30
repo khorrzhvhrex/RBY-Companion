@@ -225,8 +225,9 @@ button:hover,
 
 .party-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
+  grid-template-columns:
+    repeat(3, minmax(220px, 1fr));
+  gap: 0.75rem;
 }
 
 /* ============================================================
@@ -281,7 +282,10 @@ button:hover,
 
 
 .party-pokemon-display {
-  display: flex;
+  display: grid;
+  grid-template-columns:
+    64px minmax(0, 1fr);
+
   align-items: center;
   gap: 0.75rem;
 
@@ -301,6 +305,8 @@ button:hover,
 
 
 .party-pokemon-info {
+  min-width: 0;
+
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -349,20 +355,27 @@ button:hover,
 .party-evolve-button {
   width: 100%;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) auto;
 
-  padding: 0.45rem 0.6rem;
+  align-items: center;
+  gap: 0.75rem;
+
+  padding: 0.5rem 0.65rem;
 
   text-align: left;
+}
+
+.party-evolve-button span {
+  min-width: 0;
 }
 
 
 .party-evolve-button small {
   color: #66707b;
   white-space: nowrap;
+  text-align: right;
 }
 
 .check-grid {
@@ -418,7 +431,8 @@ button:hover,
   }
 
   .party-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(220px, 1fr));
   }
 }
 
