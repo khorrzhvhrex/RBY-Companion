@@ -2000,12 +2000,15 @@ function renderDexCard(pokemon) {
         availableHere
       )}
 
-      <div class="dex-detail-section">
-
+      <div
+        class="dex-detail-section wild-area-section"
+        id="wild-area-section-${pokemon.id}"
+      >
+      
         <h4>
           Wild Areas
         </h4>
-
+      
         <div
           class="wild-area-list"
           id="wild-areas-${pokemon.id}"
@@ -2017,7 +2020,7 @@ function renderDexCard(pokemon) {
               : `<span class="muted">Unavailable in this version.</span>`
           }
         </div>
-
+      
       </div>
 
     </article>
@@ -2563,13 +2566,15 @@ function updateWildAreaElement(
   }
 
   if (!locations.length) {
-    element.innerHTML = `
-      <span class="muted">
-        No wild encounter in
-        Pokémon ${VERSION_NAMES[state.gameVersion]}.
-      </span>
-    `;
-
+    const section =
+      document.getElementById(
+        `wild-area-section-${pokemonId}`
+      );
+  
+    if (section) {
+      section.remove();
+    }
+  
     return;
   }
 
