@@ -2477,14 +2477,7 @@ function renderVersionAvailability(
 
 
   if (availableInVersion) {
-    return `
-      <div class="availability-box available">
-
-        Available in Pokémon
-        ${VERSION_NAMES[state.gameVersion]}
-
-      </div>
-    `;
+    return "";
   }
 
 
