@@ -1009,7 +1009,7 @@ function renderMain() {
 
       </article>
 
-      <article class="panel wide">
+      <article class="panel">
 
         <h2>
           Key Items
