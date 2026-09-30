@@ -2393,28 +2393,32 @@ function renderDexCard(pokemon) {
         availableHere
       )}
 
-      <div
-        class="dex-detail-section wild-area-section"
-        id="wild-area-section-${pokemon.id}"
-      >
+      ${
+        availableInVersion
+          ? `
+            <div
+              class="dex-detail-section wild-area-section"
+              id="wild-area-section-${pokemon.id}"
+            >
       
-        <h4>
-          Wild Areas
-        </h4>
+              <h4>
+                Wild Areas
+              </h4>
       
-        <div
-          class="wild-area-list"
-          id="wild-areas-${pokemon.id}"
-          data-pokemon-id="${pokemon.id}"
-        >
-          ${
-            availableHere
-              ? `<span class="muted">Loading wild areas…</span>`
-              : `<span class="muted">Unavailable in this version.</span>`
-          }
-        </div>
+              <div
+                class="wild-area-list"
+                id="wild-areas-${pokemon.id}"
+                data-pokemon-id="${pokemon.id}"
+              >
+                <span class="muted">
+                  Loading wild areas…
+                </span>
+              </div>
       
-      </div>
+            </div>
+          `
+          : ""
+      }
 
     </article>
   `;
