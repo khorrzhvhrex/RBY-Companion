@@ -998,15 +998,15 @@ body {
 }
 
 .theme-yellow {
-  --bg: #161207;
-  --surface: #211a09;
-  --surface-2: #2a210c;
-  --surface-3: #352a10;
-  --border: #5d4a16;
-  --text: #fbf3cf;
-  --muted: #d5c48a;
-  --accent: #f0c84c;
-  --accent-text: #1b1608;
+  --bg: #171304;
+  --surface: #221c07;
+  --surface-2: #2b2409;
+  --surface-3: #372e0c;
+  --border: #6b5714;
+  --text: #fff4c2;
+  --muted: #d8c882;
+  --accent: #ffd84a;
+  --accent-text: #181300;
 }
 
 
@@ -1128,6 +1128,10 @@ select,
   background: var(--accent);
   color: var(--accent-text);
   border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 14px rgba(0, 0, 0, 0.28);
 }
 
 
@@ -1249,4 +1253,111 @@ select,
   .party-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* ============================================================
+   DEX DARK THEME POLISH
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   DEX SUMMARY CARDS
+   ------------------------------------------------------------ */
+
+.dex-stat {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.dex-stat-number {
+  color: var(--accent);
+}
+
+.dex-stat-label {
+  color: var(--muted);
+}
+
+
+/* ------------------------------------------------------------
+   AVAILABILITY BOXES
+   ------------------------------------------------------------ */
+
+.availability-box.available {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.availability-box.unavailable {
+  background: var(--surface-3);
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+
+/* ------------------------------------------------------------
+   DEX SPRITES
+   ------------------------------------------------------------ */
+
+.dex-sprite,
+.party-sprite {
+  background: rgba(255, 255, 255, 0.92);
+
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  padding: 0.2rem;
+}
+
+
+/* ------------------------------------------------------------
+   DEX CHECKBOX AREA
+   ------------------------------------------------------------ */
+
+.dex-checkbox-row {
+  border-top-color: var(--border);
+  border-bottom-color: var(--border);
+}
+
+
+/* ------------------------------------------------------------
+   DEX CARD OBTAINED STATE
+   ------------------------------------------------------------ */
+
+.dex-card.dex-obtained {
+  border-color: var(--accent);
+}
+
+
+/* ------------------------------------------------------------
+   DEX FILTER BUTTONS
+   ------------------------------------------------------------ */
+
+.filter-button {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.filter-button:hover {
+  background: var(--surface-3);
+}
+
+.filter-button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+
+/* ------------------------------------------------------------
+   TYPE CHIPS
+   ------------------------------------------------------------ */
+
+.type-chip {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
 }
