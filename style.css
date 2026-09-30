@@ -1474,3 +1474,25 @@ select,
 .type-dragon {
   background: #6f35fc;
 }
+
+/* ============================================================
+   UNAVAILABLE DEX CARDS
+   ============================================================ */
+
+.dex-card.dex-unavailable {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.dex-card.dex-unavailable .dex-number,
+.dex-card.dex-unavailable .muted {
+  color: var(--muted);
+}
+
+.dex-card.dex-unavailable h3,
+.dex-card.dex-unavailable h4,
+.dex-card.dex-unavailable strong,
+.dex-card.dex-unavailable label {
+  color: var(--text);
+}
