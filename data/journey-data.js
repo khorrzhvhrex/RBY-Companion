@@ -19,6 +19,7 @@
 //   badgeCount
 //   hm
 //   keyItem
+//   pokemonObtained
 //   dexCount
 //   hallOfFame
 //   any
@@ -388,10 +389,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "boulder"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 61
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 61
+          },
           {
             type: "dexObtained",
             pokemonId: 124
@@ -542,10 +551,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "boulder"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 32
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 32
+          },
           {
             type: "dexObtained",
             pokemonId: 29
@@ -565,10 +582,22 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "boulder"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 104
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 104
+          },
+          {
+            type: "dexObtained",
+            pokemonId: 67
+          },
           {
             type: "dexObtained",
             pokemonId: 68
@@ -638,10 +667,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "cascade"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 21
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 21
+          },
           {
             type: "dexObtained",
             pokemonId: 83
@@ -782,10 +819,18 @@ const JOURNEY_DATA = [
           {
             type: "hm",
             id: "hm01"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 63
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 63
+          },
           {
             type: "dexObtained",
             pokemonId: 122
@@ -805,10 +850,18 @@ const JOURNEY_DATA = [
           {
             type: "hm",
             id: "hm01"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 35
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 35
+          },
           {
             type: "dexObtained",
             pokemonId: 122
@@ -858,10 +911,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "cascade"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 33
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 33
+          },
           {
             type: "dexObtained",
             pokemonId: 30
@@ -881,10 +942,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "cascade"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 108
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 108
+          },
           {
             type: "dexObtained",
             pokemonId: 51
@@ -1981,10 +2050,18 @@ const JOURNEY_DATA = [
           {
             type: "keyItem",
             id: "pokeFlute"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 80
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 80
+          },
           {
             type: "dexObtained",
             pokemonId: 108
@@ -2004,10 +2081,18 @@ const JOURNEY_DATA = [
           {
             type: "keyItem",
             id: "pokeFlute"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 114
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 114
+          },
           {
             type: "dexObtained",
             pokemonId: 47
@@ -2244,10 +2329,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "soul"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 26
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 26
+          },
           {
             type: "dexObtained",
             pokemonId: 101
@@ -2271,10 +2364,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "soul"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 48
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 48
+          },
           {
             type: "dexObtained",
             pokemonId: 114
@@ -2298,10 +2399,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "soul"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 77
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 77
+          },
           {
             type: "dexObtained",
             pokemonId: 86
@@ -2325,10 +2434,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "soul"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 55
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 55
+          },
           {
             type: "dexObtained",
             pokemonId: 112
@@ -2352,10 +2469,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "soul"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 58
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 58
+          },
           {
             type: "dexObtained",
             pokemonId: 87
@@ -2379,10 +2504,18 @@ const JOURNEY_DATA = [
           {
             type: "badge",
             id: "soul"
+          },
+          {
+            type: "pokemonObtained",
+            pokemonId: 115
           }
         ],
 
         effects: [
+          {
+            type: "dexObtained",
+            pokemonId: 115
+          },
           {
             type: "dexObtained",
             pokemonId: 89
