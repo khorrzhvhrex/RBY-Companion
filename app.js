@@ -3031,45 +3031,6 @@ function updateWildAreaElement(
     }
   `;
 }
-  const element =
-    document.getElementById(
-      `wild-areas-${pokemonId}`
-    );
-
-  if (!element) {
-    return;
-  }
-
-  if (!locations.length) {
-    const section =
-      document.getElementById(
-        `wild-area-section-${pokemonId}`
-      );
-  
-    if (section) {
-      section.remove();
-    }
-  
-    return;
-  }
-
-  element.innerHTML = `
-    <ul class="wild-location-list">
-
-      ${locations
-        .map(
-          location => `
-            <li>
-              ${location}
-            </li>
-          `
-        )
-        .join("")}
-
-    </ul>
-  `;
-}
-
 
 function updateWildAreaError(
   pokemonId
