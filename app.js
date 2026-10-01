@@ -2490,7 +2490,7 @@ function renderMain() {
 
       </article>
 
-      <article class="panel">
+      <article class="panel wide">
 
         <h2>
           Party Evaluation
@@ -2499,16 +2499,6 @@ function renderMain() {
         <div id="party-evaluation-content">
           ${renderPartyEvaluation()}
         </div>
-      
-      </article>
-
-      <article class="panel">
-
-        <h2>
-          Current Journey Objectives
-        </h2>
-      
-        ${renderMainJourneyObjectives()}
       
       </article>
 
