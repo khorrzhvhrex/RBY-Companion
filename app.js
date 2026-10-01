@@ -536,6 +536,454 @@ function navButton(view, label) {
 // MAIN PAGE
 // ============================================================
 
+
+// ============================================================
+// GENERATION I TYPE ANALYSIS
+// ============================================================
+
+const GEN1_TYPES = [
+  "Normal",
+  "Fire",
+  "Water",
+  "Electric",
+  "Grass",
+  "Ice",
+  "Fighting",
+  "Poison",
+  "Ground",
+  "Flying",
+  "Psychic",
+  "Bug",
+  "Rock",
+  "Ghost",
+  "Dragon"
+];
+
+
+// ------------------------------------------------------------
+// GENERATION I TYPE CHART
+// attacking type -> defending type -> multiplier
+// ------------------------------------------------------------
+
+const GEN1_TYPE_CHART = {
+  Normal: {
+    Rock: 0.5,
+    Ghost: 0
+  },
+
+  Fire: {
+    Fire: 0.5,
+    Water: 0.5,
+    Grass: 2,
+    Ice: 2,
+    Bug: 2,
+    Rock: 0.5,
+    Dragon: 0.5
+  },
+
+  Water: {
+    Fire: 2,
+    Water: 0.5,
+    Grass: 0.5,
+    Ground: 2,
+    Rock: 2,
+    Dragon: 0.5
+  },
+
+  Electric: {
+    Water: 2,
+    Electric: 0.5,
+    Grass: 0.5,
+    Ground: 0,
+    Flying: 2,
+    Dragon: 0.5
+  },
+
+  Grass: {
+    Fire: 0.5,
+    Water: 2,
+    Grass: 0.5,
+    Poison: 0.5,
+    Ground: 2,
+    Flying: 0.5,
+    Bug: 0.5,
+    Rock: 2,
+    Dragon: 0.5
+  },
+
+  Ice: {
+    Water: 0.5,
+    Grass: 2,
+    Ground: 2,
+    Flying: 2,
+    Ice: 0.5,
+    Dragon: 2
+  },
+
+  Fighting: {
+    Normal: 2,
+    Ice: 2,
+    Poison: 0.5,
+    Flying: 0.5,
+    Psychic: 0.5,
+    Bug: 0.5,
+    Rock: 2,
+    Ghost: 0
+  },
+
+  Poison: {
+    Grass: 2,
+    Poison: 0.5,
+    Ground: 0.5,
+    Bug: 2,
+    Rock: 0.5,
+    Ghost: 0.5
+  },
+
+  Ground: {
+    Fire: 2,
+    Electric: 2,
+    Grass: 0.5,
+    Poison: 2,
+    Flying: 0,
+    Bug: 0.5,
+    Rock: 2
+  },
+
+  Flying: {
+    Electric: 0.5,
+    Grass: 2,
+    Fighting: 2,
+    Bug: 2,
+    Rock: 0.5
+  },
+
+  Psychic: {
+    Fighting: 2,
+    Poison: 2,
+    Psychic: 0.5
+  },
+
+  Bug: {
+    Fire: 0.5,
+    Grass: 2,
+    Fighting: 0.5,
+    Poison: 2,
+    Flying: 0.5,
+    Psychic: 2,
+    Ghost: 0.5
+  },
+
+  Rock: {
+    Fire: 2,
+    Ice: 2,
+    Fighting: 0.5,
+    Ground: 0.5,
+    Flying: 2,
+    Bug: 2
+  },
+
+  Ghost: {
+    Normal: 0,
+    Psychic: 0,
+    Ghost: 2
+  },
+
+  Dragon: {
+    Dragon: 2
+  }
+};
+
+
+// ------------------------------------------------------------
+// TYPE EFFECTIVENESS HELPERS
+// ------------------------------------------------------------
+
+function getGen1TypeMultiplier(
+  attackingType,
+  defendingTypes
+) {
+  return defendingTypes.reduce(
+    (multiplier, defendingType) => {
+      const typeModifier =
+        GEN1_TYPE_CHART[
+          attackingType
+        ]?.[
+          defendingType
+        ] ?? 1;
+
+      return (
+        multiplier *
+        typeModifier
+      );
+    },
+    1
+  );
+}
+
+
+function getPokemonDefensiveProfile(
+  pokemon
+) {
+  const profile = {};
+
+  for (
+    const attackingType
+    of GEN1_TYPES
+  ) {
+    profile[
+      attackingType
+    ] =
+      getGen1TypeMultiplier(
+        attackingType,
+        pokemon.types
+      );
+  }
+
+  return profile;
+}
+
+
+// ============================================================
+// PARTY ANALYSIS
+// ============================================================
+
+function analyzeParty() {
+  const members =
+    state.party
+      .map(
+        (_, index) =>
+          getPartyPokemon(
+            index
+          )
+      )
+      .filter(Boolean);
+
+
+  if (!members.length) {
+    return {
+      members: [],
+      weaknesses: [],
+      resistances: [],
+      immunities: [],
+      stabCoverage: [],
+      uncoveredTypes: [],
+      duplicateTypes: []
+    };
+  }
+
+
+  // ------------------------------------------------------------
+  // DEFENSIVE PROFILE
+  // ------------------------------------------------------------
+
+  const defensiveSummary =
+    Object.fromEntries(
+      GEN1_TYPES.map(
+        type => [
+          type,
+          {
+            weak: 0,
+            resist: 0,
+            immune: 0
+          }
+        ]
+      )
+    );
+
+
+  for (
+    const pokemon
+    of members
+  ) {
+    const profile =
+      getPokemonDefensiveProfile(
+        pokemon
+      );
+
+    for (
+      const attackingType
+      of GEN1_TYPES
+    ) {
+      const multiplier =
+        profile[
+          attackingType
+        ];
+
+      if (multiplier > 1) {
+        defensiveSummary[
+          attackingType
+        ].weak++;
+      }
+
+      if (
+        multiplier > 0 &&
+        multiplier < 1
+      ) {
+        defensiveSummary[
+          attackingType
+        ].resist++;
+      }
+
+      if (multiplier === 0) {
+        defensiveSummary[
+          attackingType
+        ].immune++;
+      }
+    }
+  }
+
+
+  const weaknesses =
+    GEN1_TYPES
+      .map(
+        type => ({
+          type,
+          ...defensiveSummary[
+            type
+          ]
+        })
+      )
+      .filter(
+        item =>
+          item.weak > 0
+      )
+      .sort(
+        (a, b) =>
+          b.weak - a.weak
+      );
+
+
+  const resistances =
+    GEN1_TYPES
+      .map(
+        type => ({
+          type,
+          ...defensiveSummary[
+            type
+          ]
+        })
+      )
+      .filter(
+        item =>
+          item.resist > 0
+      )
+      .sort(
+        (a, b) =>
+          b.resist - a.resist
+      );
+
+
+  const immunities =
+    GEN1_TYPES
+      .map(
+        type => ({
+          type,
+          ...defensiveSummary[
+            type
+          ]
+        })
+      )
+      .filter(
+        item =>
+          item.immune > 0
+      )
+      .sort(
+        (a, b) =>
+          b.immune - a.immune
+      );
+
+
+  // ------------------------------------------------------------
+  // NATIVE STAB OFFENSIVE COVERAGE
+  // ------------------------------------------------------------
+
+  const stabTypes =
+    new Set(
+      members.flatMap(
+        pokemon =>
+          pokemon.types
+      )
+    );
+
+
+  const stabCoverage =
+    GEN1_TYPES.filter(
+      defendingType =>
+        [...stabTypes].some(
+          attackingType =>
+            getGen1TypeMultiplier(
+              attackingType,
+              [defendingType]
+            ) > 1
+        )
+    );
+
+
+  const uncoveredTypes =
+    GEN1_TYPES.filter(
+      type =>
+        !stabCoverage.includes(
+          type
+        )
+    );
+
+
+  // ------------------------------------------------------------
+  // DUPLICATE PARTY TYPES
+  // ------------------------------------------------------------
+
+  const typeCounts = {};
+
+  for (
+    const pokemon
+    of members
+  ) {
+    for (
+      const type
+      of pokemon.types
+    ) {
+      typeCounts[type] =
+        (
+          typeCounts[type] ||
+          0
+        ) + 1;
+    }
+  }
+
+
+  const duplicateTypes =
+    Object.entries(
+      typeCounts
+    )
+      .filter(
+        ([, count]) =>
+          count > 1
+      )
+      .map(
+        ([type, count]) => ({
+          type,
+          count
+        })
+      )
+      .sort(
+        (a, b) =>
+          b.count - a.count
+      );
+
+
+  return {
+    members,
+    weaknesses,
+    resistances,
+    immunities,
+    stabCoverage,
+    uncoveredTypes,
+    duplicateTypes
+  };
+}
+
+
 // ============================================================
 // PARTY
 // ============================================================
@@ -802,6 +1250,309 @@ function renderPartyEvolutionControls(
 
 
 // ------------------------------------------------------------
+// PARTY ANALYSIS DISPLAY
+// ------------------------------------------------------------
+
+function renderPartyEvaluation() {
+  const analysis =
+    analyzeParty();
+
+
+  if (!analysis.members.length) {
+    return `
+      <p class="muted">
+        Add Pokémon to the Party to begin analysis.
+      </p>
+    `;
+  }
+
+
+  return `
+    <div class="party-analysis">
+
+      <div class="party-analysis-summary">
+
+        <div class="party-analysis-stat">
+
+          <strong>
+            ${analysis.members.length}
+          </strong>
+
+          <span>
+            Party Members
+          </span>
+
+        </div>
+
+        <div class="party-analysis-stat">
+
+          <strong>
+            ${analysis.stabCoverage.length}
+          </strong>
+
+          <span>
+            Types Hit Super Effectively
+          </span>
+
+        </div>
+
+        <div class="party-analysis-stat">
+
+          <strong>
+            ${analysis.duplicateTypes.length}
+          </strong>
+
+          <span>
+            Repeated Types
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <section class="party-analysis-section">
+
+        <h3>
+          Shared Weaknesses
+        </h3>
+
+        ${
+          analysis.weaknesses.length
+            ? `
+              <div class="analysis-chip-grid">
+
+                ${analysis.weaknesses
+                  .map(
+                    item => `
+                      <div class="analysis-chip">
+
+                        <span
+                          class="type-chip type-${item.type.toLowerCase()}"
+                        >
+                          ${item.type}
+                        </span>
+
+                        <span>
+                          ${item.weak}
+                          ${
+                            item.weak === 1
+                              ? "member"
+                              : "members"
+                          }
+                          weak
+                        </span>
+
+                      </div>
+                    `
+                  )
+                  .join("")}
+
+              </div>
+            `
+            : `
+              <p class="muted">
+                No shared weaknesses detected.
+              </p>
+            `
+        }
+
+      </section>
+
+
+      <section class="party-analysis-section">
+
+        <h3>
+          Resistances
+        </h3>
+
+        ${
+          analysis.resistances.length
+            ? `
+              <div class="analysis-chip-grid">
+
+                ${analysis.resistances
+                  .map(
+                    item => `
+                      <div class="analysis-chip">
+
+                        <span
+                          class="type-chip type-${item.type.toLowerCase()}"
+                        >
+                          ${item.type}
+                        </span>
+
+                        <span>
+                          ${item.resist}
+                          ${
+                            item.resist === 1
+                              ? "member"
+                              : "members"
+                          }
+                          resist
+                        </span>
+
+                      </div>
+                    `
+                  )
+                  .join("")}
+
+              </div>
+            `
+            : `
+              <p class="muted">
+                No resistances detected.
+              </p>
+            `
+        }
+
+      </section>
+
+
+      ${
+        analysis.immunities.length
+          ? `
+            <section class="party-analysis-section">
+
+              <h3>
+                Immunities
+              </h3>
+
+              <div class="analysis-chip-grid">
+
+                ${analysis.immunities
+                  .map(
+                    item => `
+                      <div class="analysis-chip">
+
+                        <span
+                          class="type-chip type-${item.type.toLowerCase()}"
+                        >
+                          ${item.type}
+                        </span>
+
+                        <span>
+                          ${item.immune}
+                          ${
+                            item.immune === 1
+                              ? "member"
+                              : "members"
+                          }
+                          immune
+                        </span>
+
+                      </div>
+                    `
+                  )
+                  .join("")}
+
+              </div>
+
+            </section>
+          `
+          : ""
+      }
+
+
+      <section class="party-analysis-section">
+
+        <h3>
+          Native STAB Coverage
+        </h3>
+
+        <p class="muted">
+          Based only on the Pokémon's own types.
+          Selected moves will expand this later.
+        </p>
+
+        <div class="analysis-type-row">
+
+          ${analysis.stabCoverage
+            .map(
+              type => `
+                <span
+                  class="type-chip type-${type.toLowerCase()}"
+                >
+                  ${type}
+                </span>
+              `
+            )
+            .join("")}
+
+        </div>
+
+      </section>
+
+
+      <section class="party-analysis-section">
+
+        <h3>
+          No Native STAB Advantage Against
+        </h3>
+
+        <div class="analysis-type-row">
+
+          ${analysis.uncoveredTypes
+            .map(
+              type => `
+                <span
+                  class="type-chip type-${type.toLowerCase()}"
+                >
+                  ${type}
+                </span>
+              `
+            )
+            .join("")}
+
+        </div>
+
+      </section>
+
+
+      ${
+        analysis.duplicateTypes.length
+          ? `
+            <section class="party-analysis-section">
+
+              <h3>
+                Repeated Party Types
+              </h3>
+
+              <div class="analysis-chip-grid">
+
+                ${analysis.duplicateTypes
+                  .map(
+                    item => `
+                      <div class="analysis-chip">
+
+                        <span
+                          class="type-chip type-${item.type.toLowerCase()}"
+                        >
+                          ${item.type}
+                        </span>
+
+                        <span>
+                          ${item.count} members
+                        </span>
+
+                      </div>
+                    `
+                  )
+                  .join("")}
+
+              </div>
+
+            </section>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+
+// ------------------------------------------------------------
 // PARTY SLOT RENDERING
 // ------------------------------------------------------------
 
@@ -969,12 +1720,9 @@ function renderMain() {
         <h2>
           Party Evaluation
         </h2>
-
-        <p class="muted">
-          Typing coverage will appear here
-          when the Party module is built.
-        </p>
-
+      
+        ${renderPartyEvaluation()}
+      
       </article>
 
       <article class="panel">
