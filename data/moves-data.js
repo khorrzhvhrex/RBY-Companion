@@ -576,14 +576,157 @@ async function getLegalMovesForPokemon(
 
 
   legalMoves.sort(
-    (a, b) =>
-      a.name.localeCompare(
+    (a, b) => {
+      const groupOrder = {
+        "level-up": 0,
+        machine: 1,
+        other: 2
+      };
+  
+  
+      const groupA =
+        getMoveDisplayGroup(
+          a
+        );
+  
+      const groupB =
+        getMoveDisplayGroup(
+          b
+        );
+  
+  
+      if (
+        groupOrder[groupA] !==
+        groupOrder[groupB]
+      ) {
+        return (
+          groupOrder[groupA] -
+          groupOrder[groupB]
+        );
+      }
+  
+  
+      // ------------------------------------------------------------
+      // LEVEL-UP MOVES: LEVEL FIRST
+      // ------------------------------------------------------------
+  
+      if (
+        groupA === "level-up"
+      ) {
+        const levelDifference =
+          getMoveLevelUpSortLevel(
+            a
+          ) -
+          getMoveLevelUpSortLevel(
+            b
+          );
+  
+  
+        if (levelDifference) {
+          return levelDifference;
+        }
+      }
+  
+  
+      // ------------------------------------------------------------
+      // SAME GROUP: ALPHABETICAL
+      // ------------------------------------------------------------
+  
+      return a.name.localeCompare(
         b.name
-      )
+      );
+    }
   );
 
 
   return legalMoves;
+}
+
+
+// ============================================================
+// MOVE ORDERING / GROUPING
+// ============================================================
+
+function getMoveLevelUpDetails(
+  move
+) {
+  return move.learnMethods
+    .filter(
+      detail =>
+        detail.method ===
+        "level-up"
+    );
+}
+
+
+function isLevelUpMove(
+  move
+) {
+  return (
+    getMoveLevelUpDetails(
+      move
+    ).length > 0
+  );
+}
+
+
+function isMachineMove(
+  move
+) {
+  return move.learnMethods.some(
+    detail =>
+      detail.method ===
+      "machine"
+  );
+}
+
+
+function getMoveLevelUpSortLevel(
+  move
+) {
+  const levels =
+    getMoveLevelUpDetails(
+      move
+    )
+      .map(
+        detail =>
+          detail.level
+      );
+
+
+  if (!levels.length) {
+    return Infinity;
+  }
+
+
+  return Math.min(
+    ...levels
+  );
+}
+
+
+function getMoveDisplayGroup(
+  move
+) {
+  if (
+    isLevelUpMove(
+      move
+    )
+  ) {
+    return "level-up";
+  }
+
+
+  if (
+    isMachineMove(
+      move
+    )
+  ) {
+    return "machine";
+  }
+
+
+  return "other";
 }
 
 
@@ -614,7 +757,7 @@ function formatMoveLearnMethod(
           );
         } else {
           labels.add(
-            "Level-up"
+            "Start"
           );
         }
 
