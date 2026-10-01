@@ -3297,13 +3297,73 @@ function renderMewGlitchGuide() {
               <strong>
                 Battle the Youngster with Slowpoke.
               </strong>
-
+            
               <p>
                 Approach him so he sees you from at least
                 one tile away and walks toward you.
                 Defeat him normally.
               </p>
-
+            
+              <div class="mew-optional-step">
+            
+                <strong>
+                  Optional: Change Mew's encounter level with Growl
+                </strong>
+            
+                <p>
+                  Before defeating Slowpoke, use Growl on it to lower
+                  its Attack stage. The number of successful Growls
+                  changes the level of the Mew encountered at the end
+                  of the glitch.
+                </p>
+            
+                <div class="mew-growl-grid">
+            
+                  <div>
+                    <span>0 Growls</span>
+                    <strong>Level 7</strong>
+                  </div>
+            
+                  <div>
+                    <span>1 Growl</span>
+                    <strong>Level 6</strong>
+                  </div>
+            
+                  <div>
+                    <span>2 Growls</span>
+                    <strong>Level 5</strong>
+                  </div>
+            
+                  <div>
+                    <span>3 Growls</span>
+                    <strong>Level 4</strong>
+                  </div>
+            
+                  <div>
+                    <span>4 Growls</span>
+                    <strong>Level 3</strong>
+                  </div>
+            
+                  <div>
+                    <span>5 Growls</span>
+                    <strong>Level 2</strong>
+                  </div>
+            
+                  <div>
+                    <span>6 Growls</span>
+                    <strong>Level 1</strong>
+                  </div>
+            
+                </div>
+            
+                <p class="mew-growl-note">
+                  Only successful Growl uses count. In Generation I,
+                  an opponent's Growl can fail, so verify that Slowpoke's
+                  Attack actually fell each time.
+                </p>
+            
+              </div>
+            
             </li>
 
 
@@ -3344,7 +3404,9 @@ function renderMewGlitchGuide() {
 
               <p>
                 Immediately after closing the menu, a wild
-                Level 7 Mew battle begins.
+                Mew battle begins. Its default level is 7,
+                or lower if you used the optional Growl
+                modifier against Slowpoke.
               </p>
 
             </li>
@@ -3374,12 +3436,15 @@ function renderMewGlitchGuide() {
             <div>
 
               <strong>
-                Wild Mew · Level 7
+                Wild Mew · Level 1-7
               </strong>
 
               <p class="muted">
-                Catch Mew normally during the resulting
-                encounter, then mark #151 Obtained in the Dex.
+                Without Growl, Mew appears at Level 7.
+                Each successful Growl used on Slowpoke lowers
+                the encounter by one level, down to Level 1
+                after six successful uses. Catch Mew normally,
+                then mark #151 Obtained in the Dex.
               </p>
 
             </div>
