@@ -1767,6 +1767,276 @@ function renderMainJourneyObjectives() {
 
 
 // ============================================================
+// MEW GLITCH GUIDE
+// ============================================================
+
+function renderMewGlitchGuide() {
+  return `
+    <section class="mew-glitch-page">
+
+      <div class="panel mew-glitch-header">
+
+        <div>
+
+          <div class="mew-glitch-kicker">
+            #151 · Mew
+          </div>
+
+          <h2>
+            Mew Glitch Guide
+          </h2>
+
+          <p class="muted">
+            Standard Route 8 / Route 25 method for
+            Pokémon ${VERSION_NAMES[state.gameVersion]}.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          data-view="dex"
+        >
+          ← Back to Dex
+        </button>
+
+      </div>
+
+
+      <div class="mew-glitch-grid">
+
+        <article class="panel">
+
+          <h3>
+            Before You Start
+          </h3>
+
+          <ul class="mew-glitch-list">
+
+            <li>
+              Do not defeat the Gambler on Route 8
+              near the Underground Path entrance.
+            </li>
+
+            <li>
+              Do not defeat the Youngster on Route 25
+              whose final Pokémon is Slowpoke.
+            </li>
+
+            <li>
+              Have a Pokémon that can use Fly.
+            </li>
+
+            <li>
+              Save before beginning the glitch.
+            </li>
+
+          </ul>
+
+        </article>
+
+
+        <article class="panel">
+
+          <h3>
+            Important
+          </h3>
+
+          <ul class="mew-glitch-list">
+
+            <li>
+              The Route 25 Youngster must walk at least
+              one tile toward you to begin the battle.
+            </li>
+
+            <li>
+              Do not battle any other Pokémon after
+              defeating the Youngster and before
+              encountering Mew.
+            </li>
+
+            <li>
+              If the sequence is interrupted, reload
+              the save made before starting.
+            </li>
+
+          </ul>
+
+        </article>
+
+
+        <article class="panel wide">
+
+          <h3>
+            Procedure
+          </h3>
+
+          <ol class="mew-glitch-steps">
+
+            <li>
+
+              <strong>
+                Go to Route 8.
+              </strong>
+
+              <p>
+                Stand directly below the entrance to
+                the Underground Path. The Gambler should
+                be just offscreen below you.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Trigger the Gambler and open the Start menu.
+              </strong>
+
+              <p>
+                Step downward while pressing Start so the
+                menu opens before the Gambler can walk up
+                and begin the battle.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Fly to Cerulean City.
+              </strong>
+
+              <p>
+                Select Fly from the Start menu and leave
+                Route 8. If successful, the Gambler's
+                exclamation mark appears just before you
+                fly away.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Walk to Route 25.
+              </strong>
+
+              <p>
+                Your Start, A, and B buttons may not work
+                normally at this stage. This is expected.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Battle the Youngster with Slowpoke.
+              </strong>
+
+              <p>
+                Approach him so he sees you from at least
+                one tile away and walks toward you.
+                Defeat him normally.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Return toward Route 8.
+              </strong>
+
+              <p>
+                Fly to Lavender Town, then walk west toward
+                Route 8. Using Fly also ensures the Start
+                menu has been opened before returning.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Enter Route 8.
+              </strong>
+
+              <p>
+                The Start menu should open automatically.
+                Close it.
+              </p>
+
+            </li>
+
+
+            <li>
+
+              <strong>
+                Encounter Mew.
+              </strong>
+
+              <p>
+                Immediately after closing the menu, a wild
+                Level 7 Mew battle begins.
+              </p>
+
+            </li>
+
+          </ol>
+
+        </article>
+
+
+        <article class="panel wide mew-glitch-result">
+
+          <h3>
+            Result
+          </h3>
+
+          <div class="mew-result-content">
+
+            <img
+              class="mew-guide-sprite"
+              src="${getSpriteUrl(
+                151,
+                state.gameVersion
+              )}"
+              alt="Mew"
+            >
+
+            <div>
+
+              <strong>
+                Wild Mew · Level 7
+              </strong>
+
+              <p class="muted">
+                Catch Mew normally during the resulting
+                encounter, then mark #151 Obtained in the Dex.
+              </p>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+
+    </section>
+  `;
+}
+
+
+// ============================================================
 // DEX STATE
 // ============================================================
 
@@ -2329,6 +2599,24 @@ function renderDexCard(pokemon) {
         availableInVersion,
         saveLocked
       )}
+
+      ${
+        pokemon.id === 151
+          ? `
+            <div class="mew-glitch-link">
+      
+              <button
+                type="button"
+                class="mew-glitch-button"
+                data-view="mew-glitch"
+              >
+                View Mew Glitch Guide
+              </button>
+      
+            </div>
+          `
+          : ""
+      }
 
       <div class="dex-checkbox-row">
 
@@ -3146,6 +3434,14 @@ function renderApp() {
   ) {
     pageContent =
       renderDex();
+  }
+
+  if (
+    state.activeView ===
+    "mew-glitch"
+  ) {
+    pageContent =
+      renderMewGlitchGuide();
   }
 
   return `
