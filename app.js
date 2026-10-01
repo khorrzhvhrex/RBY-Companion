@@ -67,7 +67,16 @@ function makeInitialState(gameVersion) {
       null,
       null
     ],
-
+    
+    partyMoves: [
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null]
+    ],
+    
     journey: {},
 
     storyFlags: {},
@@ -127,6 +136,55 @@ function ensureStateShape() {
   }
 
   state.party = state.party.slice(0, 6);
+
+  if (
+    !Array.isArray(
+      state.partyMoves
+    )
+  ) {
+    state.partyMoves = [];
+  }
+  
+  
+  while (
+    state.partyMoves.length <
+    6
+  ) {
+    state.partyMoves.push(
+      [
+        null,
+        null,
+        null,
+        null
+      ]
+    );
+  }
+  
+  
+  state.partyMoves =
+    state.partyMoves
+      .slice(0, 6)
+      .map(slotMoves => {
+        const moves =
+          Array.isArray(
+            slotMoves
+          )
+            ? slotMoves.slice(
+                0,
+                4
+              )
+            : [];
+  
+        while (
+          moves.length < 4
+        ) {
+          moves.push(
+            null
+          );
+        }
+  
+        return moves;
+      });
 
   state.activeView ||= "main";
 
@@ -760,16 +818,22 @@ function analyzeParty() {
       .filter(Boolean);
 
 
-  if (!members.length) {
-    return {
-      members: [],
-      weaknesses: [],
-      resistances: [],
-      immunities: [],
-      stabCoverage: [],
-      uncoveredTypes: [],
-      duplicateTypes: []
-    };
+  return {
+    members: [],
+    weaknesses: [],
+    resistances: [],
+    immunities: [],
+  
+    stabCoverage: [],
+    uncoveredTypes: [],
+  
+    selectedMoveCount: 0,
+    selectedMoveTypes: [],
+    moveCoverage: [],
+    moveUncoveredTypes: [],
+  
+    duplicateTypes: []
+  };
   }
 
 
@@ -930,6 +994,66 @@ function analyzeParty() {
 
 
   // ------------------------------------------------------------
+  // SELECTED MOVE COVERAGE
+  // ------------------------------------------------------------
+  
+  const selectedMoves =
+    state.partyMoves
+      .flat()
+      .filter(Boolean)
+      .map(
+        moveId =>
+          getCachedMoveDetail(
+            moveId
+          )
+      )
+      .filter(Boolean);
+  
+  
+  const damagingMoves =
+    selectedMoves.filter(
+      move =>
+        move.damageClass !==
+        "Status"
+    );
+  
+  
+  const selectedMoveTypes =
+    [
+      ...new Set(
+        damagingMoves.map(
+          move =>
+            move.type
+        )
+      )
+    ];
+  
+  
+  const moveCoverage =
+    GEN1_TYPES.filter(
+      defendingType =>
+        selectedMoveTypes.some(
+          attackingType =>
+            getGen1TypeMultiplier(
+              attackingType,
+              [
+                defendingType
+              ]
+            ) > 1
+        )
+    );
+  
+  
+  const moveUncoveredTypes =
+    GEN1_TYPES.filter(
+      type =>
+        !moveCoverage.includes(
+          type
+        )
+    );
+
+
+  // ------------------------------------------------------------
   // DUPLICATE PARTY TYPES
   // ------------------------------------------------------------
 
@@ -977,8 +1101,17 @@ function analyzeParty() {
     weaknesses,
     resistances,
     immunities,
+  
     stabCoverage,
     uncoveredTypes,
+  
+    selectedMoveCount:
+      damagingMoves.length,
+  
+    selectedMoveTypes,
+    moveCoverage,
+    moveUncoveredTypes,
+  
     duplicateTypes
   };
 }
@@ -1028,21 +1161,45 @@ function setPartyPokemon(
     return;
   }
 
+
+  const previousPokemonId =
+    state.party[
+      slotIndex
+    ];
+
+
   if (!pokemonId) {
-    state.party[slotIndex] = null;
+    state.party[
+      slotIndex
+    ] = null;
+
+    state.partyMoves[
+      slotIndex
+    ] = [
+      null,
+      null,
+      null,
+      null
+    ];
 
     saveState();
+
     render();
 
     return;
   }
 
+
   const pokemon =
-    POKEMON_BY_ID[pokemonId];
+    POKEMON_BY_ID[
+      pokemonId
+    ];
+
 
   if (!pokemon) {
     return;
   }
+
 
   if (
     !getDexEntry(
@@ -1052,10 +1209,29 @@ function setPartyPokemon(
     return;
   }
 
-  state.party[slotIndex] =
-    pokemonId;
+
+  state.party[
+    slotIndex
+  ] = pokemonId;
+
+
+  if (
+    previousPokemonId !==
+    pokemonId
+  ) {
+    state.partyMoves[
+      slotIndex
+    ] = [
+      null,
+      null,
+      null,
+      null
+    ];
+  }
+
 
   saveState();
+
   render();
 }
 
@@ -1067,31 +1243,382 @@ function setPartyPokemon(
 function validateParty() {
   state.party =
     state.party.map(
-      pokemonId => {
+      (
+        pokemonId,
+        slotIndex
+      ) => {
         if (!pokemonId) {
+          state.partyMoves[
+            slotIndex
+          ] = [
+            null,
+            null,
+            null,
+            null
+          ];
+
           return null;
         }
+
 
         const pokemon =
           POKEMON_BY_ID[
             pokemonId
           ];
 
+
         if (!pokemon) {
+          state.partyMoves[
+            slotIndex
+          ] = [
+            null,
+            null,
+            null,
+            null
+          ];
+
           return null;
         }
+
 
         if (
           !getDexEntry(
             pokemonId
           ).obtained
         ) {
+          state.partyMoves[
+            slotIndex
+          ] = [
+            null,
+            null,
+            null,
+            null
+          ];
+
           return null;
         }
+
 
         return pokemonId;
       }
     );
+}
+
+
+// ------------------------------------------------------------
+// PARTY MOVE STATE
+// ------------------------------------------------------------
+
+function getPartyMoveIds(
+  slotIndex
+) {
+  return (
+    state.partyMoves[
+      slotIndex
+    ] || [
+      null,
+      null,
+      null,
+      null
+    ]
+  );
+}
+
+
+function setPartyMove(
+  slotIndex,
+  moveIndex,
+  moveId
+) {
+  if (
+    slotIndex < 0 ||
+    slotIndex > 5 ||
+    moveIndex < 0 ||
+    moveIndex > 3
+  ) {
+    return;
+  }
+
+
+  if (
+    !state.party[
+      slotIndex
+    ]
+  ) {
+    return;
+  }
+
+
+  const slotMoves =
+    getPartyMoveIds(
+      slotIndex
+    );
+
+
+  if (moveId) {
+    const duplicateIndex =
+      slotMoves.findIndex(
+        (
+          existingMoveId,
+          index
+        ) =>
+          index !==
+            moveIndex &&
+          existingMoveId ===
+            moveId
+      );
+
+
+    if (
+      duplicateIndex !== -1
+    ) {
+      window.alert(
+        "A Pokémon cannot have the same move in multiple move slots."
+      );
+
+      render();
+
+      return;
+    }
+  }
+
+
+  state.partyMoves[
+    slotIndex
+  ][
+    moveIndex
+  ] =
+    moveId || null;
+
+
+  saveState();
+
+  render();
+}
+
+
+// ------------------------------------------------------------
+// PARTY MOVE DISPLAY
+// ------------------------------------------------------------
+
+function renderPartyMoveControls(
+  pokemon,
+  slotIndex
+) {
+  const moveIds =
+    getPartyMoveIds(
+      slotIndex
+    );
+
+
+  return `
+    <div class="party-moves">
+
+      <div class="party-moves-label">
+        Moves
+      </div>
+
+      <div class="party-move-grid">
+
+        ${moveIds
+          .map(
+            (
+              moveId,
+              moveIndex
+            ) => {
+              const move =
+                moveId
+                  ? getCachedMoveDetail(
+                      moveId
+                    )
+                  : null;
+
+
+              return `
+                <select
+                  class="party-move-select"
+                  data-party-move-slot="${slotIndex}"
+                  data-party-move-index="${moveIndex}"
+                  data-selected-move-id="${moveId || ""}"
+                >
+
+                  <option value="">
+                    ${
+                      move
+                        ? "Loading legal moves…"
+                        : `Move ${moveIndex + 1}`
+                    }
+                  </option>
+
+                  ${
+                    move
+                      ? `
+                        <option
+                          value="${move.id}"
+                          selected
+                        >
+                          ${move.name} · ${move.type}
+                        </option>
+                      `
+                      : ""
+                  }
+
+                </select>
+              `;
+            }
+          )
+          .join("")}
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// PARTY MOVE HYDRATION
+// ============================================================
+
+async function hydratePartyMoveSelectors() {
+  if (
+    !state ||
+    state.activeView !==
+      "main"
+  ) {
+    return;
+  }
+
+
+  const occupiedSlots =
+    state.party
+      .map(
+        (
+          pokemonId,
+          slotIndex
+        ) => ({
+          pokemonId,
+          slotIndex
+        })
+      )
+      .filter(
+        item =>
+          item.pokemonId
+      );
+
+
+  for (
+    const {
+      pokemonId,
+      slotIndex
+    }
+    of occupiedSlots
+  ) {
+    try {
+      const legalMoves =
+        await getLegalMovesForPokemon(
+          pokemonId,
+          state.gameVersion
+        );
+
+
+      const selects =
+        document.querySelectorAll(
+          `[data-party-move-slot="${slotIndex}"]`
+        );
+
+
+      selects.forEach(
+        select => {
+          const moveIndex =
+            Number(
+              select.dataset
+                .partyMoveIndex
+            );
+
+          const selectedMoveId =
+            state.partyMoves[
+              slotIndex
+            ][
+              moveIndex
+            ];
+
+
+          select.innerHTML = `
+            <option value="">
+              Move ${moveIndex + 1}
+            </option>
+
+            ${legalMoves
+              .map(
+                move => `
+                  <option
+                    value="${move.id}"
+                    ${
+                      move.id ===
+                      selectedMoveId
+                        ? "selected"
+                        : ""
+                    }
+                  >
+                    ${move.name}
+                    · ${move.type}
+                    · ${formatMoveLearnMethod(
+                      move
+                    )}
+                  </option>
+                `
+              )
+              .join("")}
+          `;
+        }
+      );
+    } catch (error) {
+      console.error(
+        `Move lookup failed for #${pokemonId}:`,
+        error
+      );
+
+
+      document
+        .querySelectorAll(
+          `[data-party-move-slot="${slotIndex}"]`
+        )
+        .forEach(
+          select => {
+            select.innerHTML = `
+              <option value="">
+                Move data unavailable
+              </option>
+            `;
+          }
+        );
+    }
+  }
+
+
+  refreshPartyEvaluation();
+}
+
+
+// ------------------------------------------------------------
+// PARTY EVALUATION REFRESH
+// ------------------------------------------------------------
+
+function refreshPartyEvaluation() {
+  const element =
+    document.getElementById(
+      "party-evaluation-content"
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  element.innerHTML =
+    renderPartyEvaluation();
 }
 
 
@@ -1482,7 +2009,83 @@ function renderPartyEvaluation() {
         </div>
 
       </section>
+      
+      <section class="party-analysis-section">
 
+        <h3>
+          Selected Move Coverage
+        </h3>
+      
+        ${
+          analysis.selectedMoveCount
+            ? `
+              <p class="muted">
+                ${analysis.selectedMoveCount}
+                damaging
+                ${
+                  analysis.selectedMoveCount === 1
+                    ? "move"
+                    : "moves"
+                }
+                currently selected.
+              </p>
+      
+              <div class="analysis-type-row">
+      
+                ${analysis.moveCoverage
+                  .map(
+                    type => `
+                      <span
+                        class="type-chip type-${type.toLowerCase()}"
+                      >
+                        ${type}
+                      </span>
+                    `
+                  )
+                  .join("")}
+      
+              </div>
+            `
+            : `
+              <p class="muted">
+                Select damaging moves to calculate
+                actual offensive coverage.
+              </p>
+            `
+        }
+      
+      </section>
+      
+      
+      ${
+        analysis.selectedMoveCount
+          ? `
+            <section class="party-analysis-section">
+      
+              <h3>
+                No Selected-Move Advantage Against
+              </h3>
+      
+              <div class="analysis-type-row">
+      
+                ${analysis.moveUncoveredTypes
+                  .map(
+                    type => `
+                      <span
+                        class="type-chip type-${type.toLowerCase()}"
+                      >
+                        ${type}
+                      </span>
+                    `
+                  )
+                  .join("")}
+      
+              </div>
+      
+            </section>
+          `
+          : ""
+      }
 
       <section class="party-analysis-section">
 
@@ -1669,6 +2272,11 @@ function renderPartySlot(
 
             </div>
 
+            ${renderPartyMoveControls(
+              pokemon,
+              slotIndex
+            )}
+
             ${renderPartyEvolutionControls(
               pokemon,
               slotIndex
@@ -1721,7 +2329,9 @@ function renderMain() {
           Party Evaluation
         </h2>
       
-        ${renderPartyEvaluation()}
+        <div id="party-evaluation-content">
+          ${renderPartyEvaluation()}
+        </div>
       
       </article>
 
@@ -4225,6 +4835,14 @@ function render() {
   ) {
     hydrateDexWildLocations();
   }
+
+  if (
+    state &&
+    state.activeView ===
+      "main"
+  ) {
+    hydratePartyMoveSelectors();
+  }
 }
 
 
@@ -4382,6 +5000,43 @@ function bindEvents() {
             }
           );
         });
+
+        document
+          .querySelectorAll(
+            "[data-party-move-slot][data-party-move-index]"
+          )
+          .forEach(select => {
+            select.addEventListener(
+              "change",
+              () => {
+                const slotIndex =
+                  Number(
+                    select.dataset
+                      .partyMoveSlot
+                  );
+        
+                const moveIndex =
+                  Number(
+                    select.dataset
+                      .partyMoveIndex
+                  );
+        
+                const moveId =
+                  select.value
+                    ? Number(
+                        select.value
+                      )
+                    : null;
+        
+        
+                setPartyMove(
+                  slotIndex,
+                  moveIndex,
+                  moveId
+                );
+              }
+            );
+          });
 
 
     // ============================================================
