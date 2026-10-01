@@ -87,7 +87,9 @@ function makeInitialState(gameVersion) {
     
     activeView: "main",
 
-    dexFilter: "all"
+    dexFilter: "all",
+
+    dexSearch: ""
   };
 }
 
@@ -188,6 +190,13 @@ function ensureStateShape() {
 
   state.activeView ||= "main";
 
+  if (
+    typeof state.dexSearch !==
+    "string"
+  ) {
+    state.dexSearch = "";
+  }
+  
   if (!DEX_FILTERS.includes(state.dexFilter)) {
     state.dexFilter = "all";
   }
@@ -1128,6 +1137,87 @@ function getObtainedPokemon() {
       getDexEntry(
         pokemon.id
       ).obtained
+  );
+}
+
+
+// ------------------------------------------------------------
+// PARTY SEARCH
+// ------------------------------------------------------------
+
+function formatPartyPokemonSearchValue(
+  pokemon
+) {
+  return (
+    `#${String(
+      pokemon.id
+    ).padStart(
+      3,
+      "0"
+    )} ${pokemon.name}`
+  );
+}
+
+
+function findObtainedPokemonFromSearch(
+  value
+) {
+  const query =
+    value
+      .trim()
+      .toLowerCase();
+
+
+  if (!query) {
+    return null;
+  }
+
+
+  const obtainedPokemon =
+    getObtainedPokemon();
+
+
+  return (
+    obtainedPokemon.find(
+      pokemon => {
+        const number =
+          String(
+            pokemon.id
+          );
+
+        const paddedNumber =
+          String(
+            pokemon.id
+          ).padStart(
+            3,
+            "0"
+          );
+
+        const name =
+          pokemon.name
+            .toLowerCase();
+
+        const formatted =
+          formatPartyPokemonSearchValue(
+            pokemon
+          )
+            .toLowerCase();
+
+
+        return (
+          query === name ||
+          query === number ||
+          query ===
+            `#${number}` ||
+          query ===
+            paddedNumber ||
+          query ===
+            `#${paddedNumber}` ||
+          query === formatted
+        );
+      }
+    ) ||
+    null
   );
 }
 
@@ -2198,40 +2288,44 @@ function renderPartySlot(
 
       </div>
 
-      <select
-        class="party-select"
-        data-party-slot="${slotIndex}"
-      >
+      <div class="party-search-control">
 
-        <option value="">
-          Empty
-        </option>
-
-        ${obtainedPokemon
-          .map(
-            optionPokemon => `
-              <option
-                value="${optionPokemon.id}"
-                ${
-                  pokemon?.id ===
-                  optionPokemon.id
-                    ? "selected"
-                    : ""
-                }
-              >
-                #${String(
-                  optionPokemon.id
-                ).padStart(
-                  3,
-                  "0"
-                )}
-                ${optionPokemon.name}
-              </option>
-            `
-          )
-          .join("")}
-
-      </select>
+        <input
+          type="search"
+          class="party-search-input"
+          data-party-search="${slotIndex}"
+          list="party-options-${slotIndex}"
+          placeholder="Search obtained Pokémon..."
+          autocomplete="off"
+          value="${
+            pokemon
+              ? formatPartyPokemonSearchValue(
+                  pokemon
+                )
+              : ""
+          }"
+        >
+      
+        <datalist
+          id="party-options-${slotIndex}"
+        >
+      
+          ${obtainedPokemon
+            .map(
+              optionPokemon => `
+                <option
+                  value="${formatPartyPokemonSearchValue(
+                    optionPokemon
+                  )}"
+                >
+                </option>
+              `
+            )
+            .join("")}
+      
+        </datalist>
+      
+      </div>
 
       ${
         pokemon
@@ -3775,6 +3869,128 @@ function isPokemonNativelyAvailable(
 
 
 // ============================================================
+// DEX SEARCH
+// ============================================================
+
+function pokemonMatchesDexSearch(
+  pokemon,
+  query
+) {
+  const normalizedQuery =
+    query
+      .trim()
+      .toLowerCase();
+
+
+  if (!normalizedQuery) {
+    return true;
+  }
+
+
+  const name =
+    pokemon.name
+      .toLowerCase();
+
+  const number =
+    String(
+      pokemon.id
+    );
+
+  const paddedNumber =
+    String(
+      pokemon.id
+    ).padStart(
+      3,
+      "0"
+    );
+
+
+  return (
+    name.includes(
+      normalizedQuery
+    ) ||
+    number ===
+      normalizedQuery ||
+    paddedNumber.startsWith(
+      normalizedQuery
+        .replace(
+          /^#/,
+          ""
+        )
+    ) ||
+    `#${paddedNumber}`.startsWith(
+      normalizedQuery
+    )
+  );
+}
+
+
+function applyDexSearch() {
+  if (
+    !state ||
+    state.activeView !==
+      "dex"
+  ) {
+    return;
+  }
+
+
+  const query =
+    state.dexSearch || "";
+
+
+  let visibleCount = 0;
+
+
+  document
+    .querySelectorAll(
+      "[data-dex-card-id]"
+    )
+    .forEach(card => {
+      const pokemonId =
+        Number(
+          card.dataset
+            .dexCardId
+        );
+
+      const pokemon =
+        POKEMON_BY_ID[
+          pokemonId
+        ];
+
+
+      const matches =
+        pokemon &&
+        pokemonMatchesDexSearch(
+          pokemon,
+          query
+        );
+
+
+      card.hidden =
+        !matches;
+
+
+      if (matches) {
+        visibleCount++;
+      }
+    });
+
+
+  const emptyState =
+    document.getElementById(
+      "dex-search-empty"
+    );
+
+
+  if (emptyState) {
+    emptyState.hidden =
+      visibleCount !== 0;
+  }
+}
+
+
+// ============================================================
 // DEX FILTERING
 // ============================================================
 
@@ -3962,6 +4178,7 @@ function renderDexCard(pokemon) {
 
   return `
     <article
+      data-dex-card-id="${pokemon.id}"
       class="dex-card ${
         entry.obtained
           ? "dex-obtained"
@@ -4445,6 +4662,18 @@ function renderDex() {
 
         ${renderDexSummary()}
 
+        <div class="dex-search">
+        
+          <input
+            type="search"
+            id="dex-search"
+            placeholder="Search by name or Pokédex number..."
+            autocomplete="off"
+            value="${state.dexSearch}"
+          >
+        
+        </div>
+        
         ${renderDexFilters()}
 
       </div>
@@ -4468,6 +4697,14 @@ function renderDex() {
             `
         }
 
+      </div>
+
+      <div
+        id="dex-search-empty"
+        class="panel empty-state"
+        hidden
+      >
+        No Pokémon match this search.
       </div>
 
     </section>
@@ -4899,6 +5136,8 @@ function render() {
     state &&
     state.activeView === "dex"
   ) {
+    applyDexSearch();
+  
     hydrateDexWildLocations();
   }
 
@@ -4994,27 +5233,58 @@ function bindEvents() {
   
     document
       .querySelectorAll(
-        "[data-party-slot]"
+        "[data-party-search]"
       )
-      .forEach(select => {
-        select.addEventListener(
+      .forEach(input => {
+        input.addEventListener(
           "change",
           () => {
             const slotIndex =
               Number(
-                select.dataset.partySlot
+                input.dataset
+                  .partySearch
               );
-  
-            const pokemonId =
-              select.value
-                ? Number(
-                    select.value
-                  )
-                : null;
-  
+    
+    
+            if (
+              !input.value.trim()
+            ) {
+              setPartyPokemon(
+                slotIndex,
+                null
+              );
+    
+              return;
+            }
+    
+    
+            const pokemon =
+              findObtainedPokemonFromSearch(
+                input.value
+              );
+    
+    
+            if (!pokemon) {
+              const currentPokemon =
+                getPartyPokemon(
+                  slotIndex
+                );
+    
+    
+              input.value =
+                currentPokemon
+                  ? formatPartyPokemonSearchValue(
+                      currentPokemon
+                    )
+                  : "";
+    
+              return;
+            }
+    
+    
             setPartyPokemon(
               slotIndex,
-              pokemonId
+              pokemon.id
             );
           }
         );
@@ -5184,6 +5454,25 @@ function bindEvents() {
         );
       }
 
+  const dexSearch =
+    document.getElementById(
+      "dex-search"
+    );
+  
+  
+  if (dexSearch) {
+    dexSearch.addEventListener(
+      "input",
+      () => {
+        state.dexSearch =
+          dexSearch.value;
+  
+        saveState();
+  
+        applyDexSearch();
+      }
+    );
+  }
 
   document
     .querySelectorAll(
