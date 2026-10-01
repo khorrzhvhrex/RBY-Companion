@@ -1635,32 +1635,104 @@ async function hydratePartyMoveSelectors() {
             ];
 
 
+          const levelUpMoves =
+            legalMoves.filter(
+              move =>
+                getMoveDisplayGroup(
+                  move
+                ) === "level-up"
+            );
+          
+          
+          const machineMoves =
+            legalMoves.filter(
+              move =>
+                getMoveDisplayGroup(
+                  move
+                ) === "machine"
+            );
+          
+          
+          const otherMoves =
+            legalMoves.filter(
+              move =>
+                getMoveDisplayGroup(
+                  move
+                ) === "other"
+            );
+          
+          
+          const renderMoveOptions =
+            moves =>
+              moves
+                .map(
+                  move => `
+                    <option
+                      value="${move.id}"
+                      ${
+                        move.id ===
+                        selectedMoveId
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      ${move.name}
+                      · ${move.type}
+                      · ${formatMoveLearnMethod(
+                        move
+                      )}
+                    </option>
+                  `
+                )
+                .join("");
+          
+          
           select.innerHTML = `
             <option value="">
               Move ${moveIndex + 1}
             </option>
-
-            ${legalMoves
-              .map(
-                move => `
-                  <option
-                    value="${move.id}"
-                    ${
-                      move.id ===
-                      selectedMoveId
-                        ? "selected"
-                        : ""
-                    }
-                  >
-                    ${move.name}
-                    · ${move.type}
-                    · ${formatMoveLearnMethod(
-                      move
+          
+            ${
+              levelUpMoves.length
+                ? `
+                  <optgroup label="Level-up">
+          
+                    ${renderMoveOptions(
+                      levelUpMoves
                     )}
-                  </option>
+          
+                  </optgroup>
                 `
-              )
-              .join("")}
+                : ""
+            }
+          
+            ${
+              machineMoves.length
+                ? `
+                  <optgroup label="TM / HM">
+          
+                    ${renderMoveOptions(
+                      machineMoves
+                    )}
+          
+                  </optgroup>
+                `
+                : ""
+            }
+          
+            ${
+              otherMoves.length
+                ? `
+                  <optgroup label="Other">
+          
+                    ${renderMoveOptions(
+                      otherMoves
+                    )}
+          
+                  </optgroup>
+                `
+                : ""
+            }
           `;
         }
       );
