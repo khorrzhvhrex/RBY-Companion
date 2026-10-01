@@ -818,22 +818,23 @@ function analyzeParty() {
       .filter(Boolean);
 
 
-  return {
-    members: [],
-    weaknesses: [],
-    resistances: [],
-    immunities: [],
-  
-    stabCoverage: [],
-    uncoveredTypes: [],
-  
-    selectedMoveCount: 0,
-    selectedMoveTypes: [],
-    moveCoverage: [],
-    moveUncoveredTypes: [],
-  
-    duplicateTypes: []
-  };
+  if (!members.length) {
+    return {
+      members: [],
+      weaknesses: [],
+      resistances: [],
+      immunities: [],
+
+      stabCoverage: [],
+      uncoveredTypes: [],
+
+      selectedMoveCount: 0,
+      selectedMoveTypes: [],
+      moveCoverage: [],
+      moveUncoveredTypes: [],
+
+      duplicateTypes: []
+    };
   }
 
 
